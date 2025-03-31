@@ -13,6 +13,10 @@ class Feeder : public frc2::SubsystemBase {
   void Periodic() override;
   void SimulationPeriodic() override;
 
+  // Commands
+  frc2::CommandPtr FeedIn();
+  frc2::CommandPtr FeedOut();
+
  private:
   // Electronics
   ICSparkFlex _motor{canid::ELEVATOR_MOTOR};

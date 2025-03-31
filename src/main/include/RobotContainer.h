@@ -12,5 +12,9 @@ class RobotContainer {
  private:
   void ConfigureBindings();
 
-  frc2::CommandXboxController _controller{0};
+  frc2::CommandXboxController _armController{0};
+  frc2::CommandXboxController _elevatorController{1};
+  frc2::CommandXboxController _feederController{2};
+  frc2::CommandXboxController _flywheelController{3};
+  frc2::CommandXboxController _turretController{4};
 };
