@@ -8,26 +8,25 @@ Arm::Arm() {
   ICSparkConfig config;
   config.encoder.positionConversionFactor = 1.0 / GEARING;
   config.encoder.velocityConversionFactor = 1.0 / GEARING;
-  config.closedLoop.slots[0].p = kP;
-  config.closedLoop.slots[0].maxMotion.maxVelocity = 1_tps;
-  config.closedLoop.slots[0].maxMotion.maxAcceleration = 1_tr_per_s_sq;
+  config.closedLoop.slots[0].p = 0.4;
+  config.closedLoop.slots[0].maxMotion.maxVelocity = 30_tps;
+  config.closedLoop.slots[0].maxMotion.maxAcceleration = 200_tr_per_s_sq;
   config.smartCurrentStallLimit = 100_A;
   _motor.OverwriteConfig(config);
 
-  _motor.SetFeedforwardGains(kS, kG, true, kV, kA);
+  _motor.SetFeedforwardGains(0.0_V, 0.6_V, true, 0.047_V / 1_rpm);
 
-  // _motor.SetPosition(STARTING_ANGLE);
+  _motor.SetPosition(STARTING_ANGLE);
 };
 
 void Arm::Periodic() {
-  // _motor.UpdateControls();
+  _motor.UpdateControls();
 }
 
 void Arm::SimulationPeriodic() {
   _sim.SetInputVoltage(_motor.CalcSimVoltage());
   _sim.Update(20_ms);
   _motor.IterateSim(_sim.GetVelocity(), _sim.GetAngle());
-  frc::SmartDashboard::PutNumber("Sim Arm Position", _sim.GetAngle().convert<units::turns>().value());
 }
 
 frc2::CommandPtr Arm::MaxMotionTo(units::turn_t angle) { 

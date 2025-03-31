@@ -9,10 +9,10 @@ RobotContainer::RobotContainer() {
 }
 
 void RobotContainer::ConfigureBindings() {
-  _controller.A().WhileTrue(Turret::GetInstance().MaxMotionTo(0_deg));
-  _controller.B().WhileTrue(Turret::GetInstance().WPIProfileTo(90_deg));
-  _controller.X().WhileTrue(Turret::GetInstance().PIDTo(180_deg));
-  _controller.Y().WhileTrue(Turret::GetInstance().DriveWithDutyCycle(-1));
+  _controller.A().WhileTrue(Arm::GetInstance().MaxMotionTo(0_deg));
+  _controller.B().WhileTrue(Arm::GetInstance().WPIProfileTo(90_deg));
+  _controller.X().WhileTrue(Arm::GetInstance().PIDTo(180_deg));
+  _controller.Y().WhileTrue(Arm::GetInstance().DriveWithDutyCycle(-1));
 
 }
 

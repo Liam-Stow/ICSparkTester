@@ -35,15 +35,6 @@ class Arm : public frc2::SubsystemBase {
   static constexpr units::kilogram_square_meter_t MOI =
       frc::sim::SingleJointedArmSim::EstimateMOI(LENGTH, MASS);
 
-  // Gains
-  static constexpr double kP = 0.0;
-  static constexpr double kI = 0.0;
-  static constexpr double kD = 0.0;
-  static constexpr units::volt_t kS = 0.0_V;
-  static constexpr units::volt_t kG = 0.0_V;
-  static constexpr auto kV = 0.0_V / 1_tps;
-  static constexpr auto kA = 0.0_V / 1_tr_per_s_sq;
-
   // Simulation
   static constexpr frc::DCMotor MOTOR_MODEL = frc::DCMotor::NeoVortex();
   static constexpr bool SIMULATE_GRAVITY = true;
