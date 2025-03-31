@@ -2,7 +2,7 @@
 
 ICSparkMax::ICSparkMax(int deviceID)
     : SparkMax(deviceID, rev::spark::SparkLowLevel::MotorType::kBrushless),
-      ICSpark(this, GetEncoder(), SparkMax::configAccessor) {}
+      ICSpark(this, GetEncoder()) {}
 
 void ICSparkMax::Set(double speed) { ICSpark::SetDutyCycle(speed); }
 

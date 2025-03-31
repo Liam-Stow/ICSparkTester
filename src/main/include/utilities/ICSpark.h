@@ -49,8 +49,7 @@ class ICSpark : public wpi::Sendable {
    * @param inbultEncoder rvalue reference to the encoder built into the NEO
    * @param spark Reference to the spark to control
    */
-  ICSpark(rev::spark::SparkBase* spark, rev::spark::SparkRelativeEncoder& inbuiltEncoder,
-          rev::spark::SparkBaseConfigAccessor& configAccessor);
+  ICSpark(rev::spark::SparkBase* spark, rev::spark::SparkRelativeEncoder& inbuiltEncoder);
 
   /**
    * Sets position of motor
@@ -159,7 +158,7 @@ class ICSpark : public wpi::Sendable {
    * (https://docs.wpilib.org/en/stable/docs/software/wpilib-tools/robot-simulation/physics-sim.html)
    */
   units::volt_t CalcSimVoltage();
-
+  
   /**
    * Run internal calculations and set internal state.
    * This method belongs in Simulation Periodic. Use a WPILib physics simulation class or equivalent
@@ -185,10 +184,9 @@ class ICSpark : public wpi::Sendable {
    * @param velocity - The externally calculated velocity in units after conversion. The internal
    * simulation state will 'lag' slightly behind this input due to the SPARK Device internal
    * filtering. Noise will also be added.
-   * @param vbus - Bus voltage in volts (See WPILib's BatterySim class to simulate this, or use 12V)
-   * @param dt - Simulation time step in seconds
+   * @param position - The externally calculated position in units after conversion.
    */
-  void IterateSim(units::turns_per_second_t velocity, units::volt_t batteryVoltage = 12_V);
+  void IterateSim(units::turns_per_second_t velocity, units::turn_t position);
 
   /**
    * Gets the current closed loop control type.
@@ -214,6 +212,11 @@ class ICSpark : public wpi::Sendable {
    * Get the voltage applied to the motor.
   */
   units::volt_t GetMotorVoltage();
+
+  /**
+   * Get the current draw of the motor stator.
+   */
+  units::ampere_t GetStatorCurrent();
   
   /**
    * Common interface to stop the motor until Set is called again or closed loop control is started.
@@ -416,7 +419,6 @@ class ICSpark : public wpi::Sendable {
 
  private:
   rev::spark::SparkBase* _spark;
-  rev::spark::SparkBaseConfigAccessor _sparkConfigAccessor;
   ICSparkConfig _configCache;
 
   // Feedback control objects

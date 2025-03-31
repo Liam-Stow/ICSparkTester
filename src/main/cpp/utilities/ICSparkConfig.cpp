@@ -245,6 +245,10 @@ void ICSparkConfig::Adjust(const ICSparkConfig& other) {
         MergeOptional(targetSlot.minOutput, sourceSlot.minOutput);
         MergeOptional(targetSlot.maxOutput, sourceSlot.maxOutput);
         MergeOptional(targetSlot.iMaxAccum, sourceSlot.iMaxAccum);
+        MergeOptional(targetSlot.maxMotion.maxVelocity, sourceSlot.maxMotion.maxVelocity);
+        MergeOptional(targetSlot.maxMotion.maxAcceleration, sourceSlot.maxMotion.maxAcceleration);
+        MergeOptional(targetSlot.maxMotion.allowedClosedLoopError, sourceSlot.maxMotion.allowedClosedLoopError);
+        MergeOptional(targetSlot.maxMotion.positionMode, sourceSlot.maxMotion.positionMode);
     };
 
     MergeSlot(closedLoop.slots[0], other.closedLoop.slots[0]);

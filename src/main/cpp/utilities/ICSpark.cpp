@@ -1,6 +1,8 @@
 #include "utilities/ICSpark.h"
 
 #include <frc/RobotBase.h>
+#include <frc/RobotController.h>
+#include <frc/simulation/RoboRioSim.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <wpi/MathExtras.h>
 #include <units/voltage.h>
@@ -8,10 +10,8 @@
 #include <iostream>
 #include <rev/ClosedLoopSlot.h>
 
-ICSpark::ICSpark(rev::spark::SparkBase* spark, rev::spark::SparkRelativeEncoder& inbuiltEncoder,
-                 rev::spark::SparkBaseConfigAccessor& configAccessor)
+ICSpark::ICSpark(rev::spark::SparkBase* spark, rev::spark::SparkRelativeEncoder& inbuiltEncoder)
     : _spark(spark),
-      _sparkConfigAccessor(configAccessor),
       _encoder(inbuiltEncoder),
       _simSpark(spark, &_simMotor) {
   // Apply the IC default configuration.
@@ -27,6 +27,8 @@ void ICSpark::InitSendable(wpi::SendableBuilder& builder) {
   builder.AddDoubleProperty("Position",                   [&] { return GetPosition().value(); },                  nullptr);
   builder.AddDoubleProperty("Velocity",                   [&] { return GetVelocity().value(); },                  nullptr);
   builder.AddDoubleProperty("Voltage",                    [&] { return GetMotorVoltage().value(); },              nullptr);
+  builder.AddDoubleProperty("Current",                    [&] { return GetStatorCurrent().value(); },             nullptr);
+  builder.AddDoubleProperty("Temperature",                [&] { return _spark->GetMotorTemperature(); },          nullptr);
   builder.AddDoubleProperty("Position Target",            [&] { return _positionTarget.value(); },                [&](double targ) { SetPositionTarget(targ*1_tr); });
   builder.AddDoubleProperty("Velocity Target",            [&] { return _velocityTarget.value(); },                [&](double targ) { SetVelocityTarget(targ*1_tps); });
   builder.AddDoubleProperty("Profile Position Target",    [&] { return _latestMotionTarget.position.value(); },   [&](double targ) { SetMotionProfileTarget(targ*1_tr); });
@@ -320,12 +322,18 @@ units::volt_t ICSpark::GetMotorVoltage() {
   }
 }
 
+units::ampere_t ICSpark::GetStatorCurrent() {
+  return _spark->GetOutputCurrent() * 1_A;
+}
+
 units::volt_t ICSpark::CalcSimVoltage() {
+  return _simSpark.GetAppliedOutput() * frc::RobotController::GetBatteryVoltage();
+
   units::volt_t output = 0_V;
   // Allowing use of config accessor in the sim only functions
   // Don't use them in hardware code because they are blocking calls and wait on CAN bus responses.
-  double posConversionFactor = _sparkConfigAccessor.encoder.GetPositionConversionFactor(); 
-  double velConversionFactor = _sparkConfigAccessor.encoder.GetVelocityConversionFactor();
+  double posConversionFactor = _configCache.encoder.positionConversionFactor.value_or(1); 
+  double velConversionFactor = _configCache.encoder.velocityConversionFactor.value_or(1);
 
   switch (_controlType) {
     case ControlType::kDutyCycle:
@@ -388,9 +396,13 @@ units::volt_t ICSpark::CalcSimVoltage() {
   return output;
 }
 
-void ICSpark::IterateSim(units::turns_per_second_t velocity, units::volt_t batteryVoltage) {
+void ICSpark::IterateSim(units::turns_per_second_t velocity, units::turn_t position) {
   const units::second_t dt = 20_ms;
+  const units::volt_t batteryVoltage = frc::sim::RoboRioSim::GetVInVoltage();
   _simSpark.iterate(velocity.value(), batteryVoltage.value(), dt.value());
+  // REV's spark sim can work without explicitly telling it the positon of the mechanism,
+  // but we find that it falls out of sync with the physics model if we don't set it.
+  _encoder.SetPosition(_simSpark.GetPosition());
 }
 
 bool ICSpark::InMotionMode() {
