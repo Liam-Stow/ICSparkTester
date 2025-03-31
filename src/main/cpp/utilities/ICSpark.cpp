@@ -13,7 +13,7 @@
 ICSpark::ICSpark(rev::spark::SparkBase* spark, rev::spark::SparkRelativeEncoder& inbuiltEncoder)
     : _spark(spark),
       _encoder(inbuiltEncoder),
-      _simSpark(spark, &_simMotor) {
+      _simSpark(spark, &_vortexModel) {
   // Apply the IC default configuration.
   // Includes setting vel conversion factor to use revs per sec not revs per min and a safeish
   // current limit.
@@ -158,7 +158,6 @@ void ICSpark::SetDutyCycle(double speed) {
   _latestModelFeedForward = 0_V;
   _controlType = ControlType::kDutyCycle;
 
-  _simVoltage = std::clamp(speed, -1.0, 1.0) * _spark->GetBusVoltage() * 1_V;
   _sparkPidController.SetReference(speed, rev::spark::SparkLowLevel::ControlType::kDutyCycle);
 }
 
@@ -169,7 +168,6 @@ void ICSpark::SetVoltage(units::volt_t output) {
   _arbFeedForward = 0_V;
   _controlType = ControlType::kVoltage;
 
-  _simVoltage = output;
   _sparkPidController.SetReference(output.value(), rev::spark::SparkLowLevel::ControlType::kVoltage);
 }
 
@@ -308,7 +306,7 @@ units::turns_per_second_t ICSpark::GetVelocity() {
 
 double ICSpark::GetDutyCycle() const {
   if constexpr (frc::RobotBase::IsSimulation()) {
-    return _simVoltage.value()/_spark->GetBusVoltage();
+    return _simSpark.GetAppliedOutput();
   } else {
     return _spark->GetAppliedOutput();
   }
@@ -316,7 +314,7 @@ double ICSpark::GetDutyCycle() const {
 
 units::volt_t ICSpark::GetMotorVoltage() {
   if constexpr (frc::RobotBase::IsSimulation()) {
-    return _simVoltage;
+    return CalcSimVoltage();
   } else {
     return _spark->GetAppliedOutput() * _spark->GetBusVoltage()*1_V;
   }
@@ -328,72 +326,6 @@ units::ampere_t ICSpark::GetStatorCurrent() {
 
 units::volt_t ICSpark::CalcSimVoltage() {
   return _simSpark.GetAppliedOutput() * frc::RobotController::GetBatteryVoltage();
-
-  units::volt_t output = 0_V;
-  // Allowing use of config accessor in the sim only functions
-  // Don't use them in hardware code because they are blocking calls and wait on CAN bus responses.
-  double posConversionFactor = _configCache.encoder.positionConversionFactor.value_or(1); 
-  double velConversionFactor = _configCache.encoder.velocityConversionFactor.value_or(1);
-
-  switch (_controlType) {
-    case ControlType::kDutyCycle:
-      output = _spark->Get() * _spark->GetBusVoltage()*1_V;
-      break;
-
-    case ControlType::kVelocity:
-      // Spark internal PID uses native units (motor shaft RPM)
-      // so divide by conversion factor to use that
-      output = units::volt_t{
-          _rioPidController.Calculate(GetVelocity().value(), _velocityTarget.value()) /
-          velConversionFactor};
-      break;
-
-    case ControlType::kPosition:
-      // Spark internal PID uses native units (motor shaft rotations)
-      // so divide by conversion factor to use that
-      output = units::volt_t{
-          _rioPidController.Calculate(GetPosition().value(), _positionTarget.value()) /
-          posConversionFactor};
-      break;
-
-    case ControlType::kVoltage:
-      output = _voltageTarget;
-      break;
-
-    case ControlType::kMaxMotion:
-    case ControlType::kMotionProfile:
-      output = units::volt_t{
-          _rioPidController.Calculate(GetPosition().value(), _latestMotionTarget.position.value()) /
-          posConversionFactor};
-      break;
-
-    case ControlType::kCurrent:
-      break;
-  }
-
-  output += _arbFeedForward + _latestModelFeedForward;
-
-  // Soft limits
-  bool posLimitOn = _configCache.softLimit.forwardSoftLimitEnabled.value_or(false);
-  bool negLimitOn = _configCache.softLimit.reverseSoftLimitEnabled.value_or(false);
-  units::turn_t posLimit = _configCache.softLimit.forwardSoftLimit.value_or(0_tr);
-  units::turn_t negLimit = _configCache.softLimit.reverseSoftLimit.value_or(0_tr);
-  if (posLimitOn && GetPosition() >= posLimit && output > 0_V) {
-    output = 0_V;
-  }
-  if (negLimitOn && GetPosition() <= negLimit && output < 0_V) {
-    output = 0_V;
-  }
-
-  double minOutput = _configCache.closedLoop.slots[0].minOutput.value_or(-1);
-  double maxOutput = _configCache.closedLoop.slots[0].maxOutput.value_or(1);
-  output = std::clamp(output, minOutput * 12_V, maxOutput * 12_V);
-
-  // store a latest copy because we can't call calculate() on the rio pid controller whenever we
-  // want, it expects to be called at a specific frequency.
-  _simVoltage = output;
-
-  return output;
 }
 
 void ICSpark::IterateSim(units::turns_per_second_t velocity, units::turn_t position) {
@@ -402,7 +334,7 @@ void ICSpark::IterateSim(units::turns_per_second_t velocity, units::turn_t posit
   _simSpark.iterate(velocity.value(), batteryVoltage.value(), dt.value());
   // REV's spark sim can work without explicitly telling it the positon of the mechanism,
   // but we find that it falls out of sync with the physics model if we don't set it.
-  _encoder.SetPosition(_simSpark.GetPosition());
+  _simSpark.SetPosition(position.value());
 }
 
 bool ICSpark::InMotionMode() {

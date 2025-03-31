@@ -158,7 +158,7 @@ class ICSpark : public wpi::Sendable {
    * (https://docs.wpilib.org/en/stable/docs/software/wpilib-tools/robot-simulation/physics-sim.html)
    */
   units::volt_t CalcSimVoltage();
-  
+
   /**
    * Run internal calculations and set internal state.
    * This method belongs in Simulation Periodic. Use a WPILib physics simulation class or equivalent
@@ -166,9 +166,9 @@ class ICSpark : public wpi::Sendable {
    * update the simulated state of the motor.
    *
    * Simulating a Spark this way will use the configurations and controls of the original
-   * CANSparkMax or CANSparkFlex device to simulate velocity noise, all supported control modes
-   * (including MAXMotion), arb feedforward input, voltage compensation, limit switches, soft
-   * limits, and current limiting, with algorithms translated directly from the Spark firmware.
+   * CANSparkMax or CANSparkFlex device to simulate all supported control modes, arb feedforward 
+   * input, voltage compensation, limit switches, soft limits, and current limiting, with 
+   * algorithms translated directly from the Spark firmware.
    *
    * This method will update the CANSparkSim's position and velocity, accessible with getPosition()
    * and getVelocity(). These values are automatically used as the selected feedback sensor for
@@ -183,7 +183,7 @@ class ICSpark : public wpi::Sendable {
    * Parameters:
    * @param velocity - The externally calculated velocity in units after conversion. The internal
    * simulation state will 'lag' slightly behind this input due to the SPARK Device internal
-   * filtering. Noise will also be added.
+   * filtering.
    * @param position - The externally calculated position in units after conversion.
    */
   void IterateSim(units::turns_per_second_t velocity, units::turn_t position);
@@ -451,9 +451,6 @@ class ICSpark : public wpi::Sendable {
   bool InMotionMode();
 
   // Simulation objects
-  frc::DCMotor _simMotor = frc::DCMotor::NeoVortex();
+  frc::DCMotor _vortexModel = frc::DCMotor::NeoVortex();
   rev::spark::SparkSim _simSpark;
-  // store a latest copy of sim voltage because we can't call calculate() on the pid controller
-  // whenever we want, it expects to be called at a specific frequency.
-  units::volt_t _simVoltage = 0_V;  
 };
