@@ -6,18 +6,20 @@ Turret::Turret() {
   frc::SmartDashboard::PutData("Turret", &_motor);
 
   ICSparkConfig config;
-  config.encoder.positionConversionFactor = GEARING;
+  config.encoder.positionConversionFactor = 1.0 / GEARING;
   config.encoder.velocityConversionFactor = 1.0 / GEARING;
-  config.closedLoop.slots[0].p = 0.0;
-  config.closedLoop.slots[0].maxMotion.maxVelocity = 1_rpm;
-  config.closedLoop.slots[0].maxMotion.maxAcceleration = 1_rev_per_m_per_s;
+  config.closedLoop.slots[0].p = 0.2;
+  config.closedLoop.slots[0].maxMotion.maxVelocity = 30_rpm;
+  config.closedLoop.slots[0].maxMotion.maxAcceleration = 200_rev_per_m_per_s;
   config.smartCurrentStallLimit = 100_A;
   _motor.OverwriteConfig(config);
 
-  // _motor.SetFeedforwardGains(kS, kG, true, kV, kA);
+  _motor.SetFeedforwardGains(0.0_V, 0.0_V, true, 0.036_V / 1_rpm, 0.0_V / 1_rev_per_m_per_s);
 };
 
-void Turret::Periodic() {}
+void Turret::Periodic() {
+  _motor.UpdateControls();
+}
 
 void Turret::SimulationPeriodic() {
     _turretSim.SetInputVoltage(_motor.CalcSimVoltage());

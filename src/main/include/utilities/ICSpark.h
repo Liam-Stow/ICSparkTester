@@ -292,7 +292,7 @@ class ICSpark : public wpi::Sendable {
    */
   void SetFeedforwardGains(units::volt_t S = 0_V, units::volt_t G = 0_V,
                            bool gravityIsRotational = false, VoltsPerRpm V = 0_V / 1_tps,
-                           VoltsPerRpmPerS A = 0_V / 1_tr_per_s_sq);
+                           VoltsPerRpmPerS A = 0_V / 1_rev_per_m_per_s);
   
   /**
    * Set the Static Friction gain constant of the feed forward model.

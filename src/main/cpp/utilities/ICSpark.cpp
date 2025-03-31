@@ -198,9 +198,13 @@ void ICSpark::UpdateControls(units::second_t loopTime) {
     }
     case ControlType::kPosition:
       sparkTarget = _positionTarget.value();
+      _latestMotionTarget = {_positionTarget, 0_rpm};
+      prevVelTarget = 0_rpm;
       break;
     case ControlType::kVelocity:
       sparkTarget = _velocityTarget.value();
+      _latestMotionTarget = {0_tr, _velocityTarget};
+      prevVelTarget = _velocityTarget;
       break;
     default:
       return;

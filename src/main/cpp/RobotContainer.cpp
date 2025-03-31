@@ -10,7 +10,9 @@ RobotContainer::RobotContainer() {
 
 void RobotContainer::ConfigureBindings() {
   _controller.A().WhileTrue(Turret::GetInstance().MaxMotionTo(0_deg));
-  _controller.B().WhileTrue(Turret::GetInstance().MaxMotionTo(90_deg));
+  _controller.B().WhileTrue(Turret::GetInstance().WPIProfileTo(90_deg));
+  _controller.X().WhileTrue(Turret::GetInstance().PIDTo(180_deg));
+  _controller.Y().WhileTrue(Turret::GetInstance().DriveWithDutyCycle(-1));
 
 }
 

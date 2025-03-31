@@ -7,7 +7,7 @@ Arm::Arm() {
 
   ICSparkConfig config;
   config.encoder.positionConversionFactor = 1.0 / GEARING;
-  config.encoder.velocityConversionFactor = 1.0 / GEARING / 60.0;
+  config.encoder.velocityConversionFactor = 1.0 / GEARING;
   config.closedLoop.slots[0].p = kP;
   config.closedLoop.slots[0].maxMotion.maxVelocity = 1_tps;
   config.closedLoop.slots[0].maxMotion.maxAcceleration = 1_tr_per_s_sq;
