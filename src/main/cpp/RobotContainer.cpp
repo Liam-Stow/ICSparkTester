@@ -25,8 +25,8 @@ void RobotContainer::ConfigureBindings() {
   _elevatorController.Y().WhileTrue(Elevator::GetInstance().DriveWithDutyCycle(-1));
 
   // Feeder
-  // _feederController.A().WhileTrue(Feeder::GetInstance().FeedIn());
-  // _feederController.B().WhileTrue(Feeder::GetInstance().FeedOut());
+  _feederController.A().WhileTrue(Feeder::GetInstance().FeedIn());
+  _feederController.B().WhileTrue(Feeder::GetInstance().FeedOut());
 
   // Flywheel
   // _flywheelController.A().WhileTrue(Flywheel::GetInstance().SpinUpTo(1000_rpm));

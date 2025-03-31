@@ -19,5 +19,5 @@ class Feeder : public frc2::SubsystemBase {
 
  private:
   // Electronics
-  ICSparkFlex _motor{canid::ELEVATOR_MOTOR};
+  ICSparkFlex _motor{canid::FEEDER_MOTOR};
 };
