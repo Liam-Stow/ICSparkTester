@@ -18,17 +18,16 @@ class Flywheel : public frc2::SubsystemBase {
   void SimulationPeriodic() override;
   
   // Commands
-  frc2::CommandPtr SpinUpTo(units::turns_per_second_t velocity);
-  frc2::CommandPtr MaxMotionTo(units::turns_per_second_t velocity);
+  frc2::CommandPtr SpinAt(units::turns_per_second_t velocity);
 
  private:
   // Electronics
-  ICSparkFlex _shooterMotor{canid::FLYWHEEL_MOTOR};
+  ICSparkFlex _motor{canid::FLYWHEEL_MOTOR};
 
   // Simulation
   static constexpr double GEARING = 1.0;
   static constexpr units::kilogram_square_meter_t MOI = 0.05_kg_sq_m;
   static constexpr frc::DCMotor MOTOR_MODEL = frc::DCMotor::NeoVortex();
   frc::LinearSystem<1,1,1> _flywheelSystem = frc::LinearSystemId::FlywheelSystem(MOTOR_MODEL, MOI, GEARING);
-  frc::sim::FlywheelSim _flywheelSim{_flywheelSystem, MOTOR_MODEL};
+  frc::sim::FlywheelSim _sim{_flywheelSystem, MOTOR_MODEL};
 };

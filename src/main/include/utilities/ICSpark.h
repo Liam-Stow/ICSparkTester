@@ -165,8 +165,8 @@ class ICSpark : public wpi::Sendable {
    * update the simulated state of the motor.
    *
    * Simulating a Spark this way will use the configurations and controls of the original
-   * CANSparkMax or CANSparkFlex device to simulate all supported control modes, arb feedforward 
-   * input, voltage compensation, limit switches, soft limits, and current limiting, with 
+   * CANSparkMax or CANSparkFlex device to simulate all supported control modes, arb feedforward
+   * input, voltage compensation, limit switches, soft limits, and current limiting, with
    * algorithms translated directly from the Spark firmware.
    *
    * This method will update the CANSparkSim's position and velocity, accessible with getPosition()
@@ -179,13 +179,15 @@ class ICSpark : public wpi::Sendable {
    * velocity divided by 5. The selected sensor's position and velocity will automatically be
    * updated to match the CANSparkSim's when this method is called.
    *
-   * Parameters:
    * @param velocity - The externally calculated velocity in units after conversion. The internal
    * simulation state will 'lag' slightly behind this input due to the SPARK Device internal
    * filtering.
-   * @param position - The externally calculated position in units after conversion.
+   * @param position - The externally calculated position in units after conversion. If position is
+   * not provided, it will be calculated from the velocity over time (this may fall out of sync with
+   * a WPI physics simulation).
    */
-  void IterateSim(units::revolutions_per_minute_t velocity, units::turn_t position);
+  void IterateSim(units::revolutions_per_minute_t velocity,
+                  std::optional<units::turn_t> position = std::nullopt);
 
   /**
    * Gets the current closed loop control type.
@@ -439,7 +441,7 @@ class ICSpark : public wpi::Sendable {
   // Control References (Targets)
   using MPState = frc::TrapezoidProfile<units::turns>::State;
   units::turn_t _positionTarget{0};
-  units::turns_per_second_t _velocityTarget{0};
+  units::revolutions_per_minute_t _velocityTarget{0};
   units::volt_t _voltageTarget{0};
   frc::TrapezoidProfile<units::turns> _motionProfile{{0_rpm, 0_rev_per_m_per_s}};
   MPState CalcNextMotionTarget(MPState current, units::turn_t goalPosition,

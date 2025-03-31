@@ -29,8 +29,8 @@ void RobotContainer::ConfigureBindings() {
   _feederController.B().WhileTrue(Feeder::GetInstance().FeedOut());
 
   // Flywheel
-  // _flywheelController.A().WhileTrue(Flywheel::GetInstance().SpinUpTo(1000_rpm));
-  // _flywheelController.B().WhileTrue(Flywheel::GetInstance().MaxMotionTo(1000_rpm));
+  _flywheelController.A().WhileTrue(Flywheel::GetInstance().SpinAt(1000_rpm));
+  _flywheelController.B().WhileTrue(Flywheel::GetInstance().SpinAt(-1000_rpm));
 
   // Turret
   _turretController.A().WhileTrue(Turret::GetInstance().MaxMotionTo(0_deg));

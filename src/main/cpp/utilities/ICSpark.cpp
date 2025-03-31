@@ -338,13 +338,16 @@ units::volt_t ICSpark::CalcSimVoltage() {
   return _simSpark.GetAppliedOutput() * frc::RobotController::GetBatteryVoltage();
 }
 
-void ICSpark::IterateSim(units::revolutions_per_minute_t velocity, units::turn_t position) {
+void ICSpark::IterateSim(units::revolutions_per_minute_t velocity, std::optional<units::turn_t> position) {
   const units::second_t dt = 20_ms;
   const units::volt_t batteryVoltage = frc::sim::RoboRioSim::GetVInVoltage();
   _simSpark.iterate(velocity.value(), batteryVoltage.value(), dt.value());
+
   // REV's spark sim can work without explicitly telling it the positon of the mechanism,
   // but we find that it falls out of sync with the physics model if we don't set it.
-  _simSpark.SetPosition(position.value());
+  if (position.has_value()) {
+    _simSpark.SetPosition(position.value().value());
+  }
 }
 
 bool ICSpark::InMotionMode() {
