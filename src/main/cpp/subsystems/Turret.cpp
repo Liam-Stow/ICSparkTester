@@ -3,3 +3,5 @@
 Turret::Turret() = default;
 
 void Turret::Periodic() {}
+
+void Turret::SimulationPeriodic() {}
