@@ -20,10 +20,11 @@ class Turret : public frc2::SubsystemBase {
   frc2::CommandPtr MaxMotionTo(units::turn_t angle);
   frc2::CommandPtr WPIProfileTo(units::turn_t angle);
   frc2::CommandPtr PIDTo(units::turn_t angle);
+  frc2::CommandPtr DriveWithDutyCycle(double dutyCycle);
 
  private:
   // Electronics
-  ICSparkFlex _turretMotor{canid::TURRET_MOTOR};
+  ICSparkFlex _motor{canid::TURRET_MOTOR};
 
   // Constants
   static constexpr double GEARING = 20;

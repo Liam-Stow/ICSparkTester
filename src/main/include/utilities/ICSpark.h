@@ -20,10 +20,9 @@
 
 /**
  * Wrapper around the Rev CANSparkBase class with some convenience features.
- * - Required Current Limit Setting
- * - Better simulation support (see CalcSimVoltage() and IterateSim())
+ * - Easier simulation support (see CalcSimVoltage() and IterateSim())
  * - Uses C++ units
- * - Encoder and pid functions are built into this class
+ * - Encoder and pid functions are built in
  */
 class ICSpark : public wpi::Sendable {
  public:
@@ -37,10 +36,10 @@ class ICSpark : public wpi::Sendable {
     kMotionProfile = 10
   };
 
-  using VoltsPerTps = units::unit_t<units::compound_unit<
-      units::volts, units::inverse<units::turns_per_second>>>;
-  using VoltsPerTpsSq = units::unit_t<units::compound_unit<
-      units::volts, units::inverse<units::turns_per_second_squared>>>;
+  using VoltsPerRpm = units::unit_t<units::compound_unit<
+      units::volts, units::inverse<units::revolutions_per_minute>>>;
+  using VoltsPerRpmPerS = units::unit_t<units::compound_unit<
+      units::volts, units::inverse<units::revolutions_per_minute_per_second>>>;
 
   /**
    * Create a new object to control a SPARK motor controller.
@@ -107,7 +106,7 @@ class ICSpark : public wpi::Sendable {
    * result of the specified control mode. This value is added after the control mode, but before
    * any current limits or ramp rates
    */
-  void SetVelocityTarget(units::turns_per_second_t target, units::volt_t arbFeedForward = 0.0_V);
+  void SetVelocityTarget(units::revolutions_per_minute_t target, units::volt_t arbFeedForward = 0.0_V);
 
   /**
    * Update motion profile targets and feedforward calculations. This is required to be called
@@ -126,8 +125,8 @@ class ICSpark : public wpi::Sendable {
    * @param vel The velocity target
    * @param accel The acceleration target
    */
-  units::volt_t CalculateFeedforward(units::turn_t pos, units::turns_per_second_t vel,
-                                     units::turns_per_second_squared_t accel = 0_tr_per_s_sq);
+  units::volt_t CalculateFeedforward(units::turn_t pos, units::revolutions_per_minute_t vel,
+                                     units::revolutions_per_minute_per_second_t accel = 0_tr_per_s_sq);
 
   /**
    * Gets the current closed loop position target if there is one. Zero otherwise.
@@ -137,7 +136,7 @@ class ICSpark : public wpi::Sendable {
   /**
    * Gets the current closed loop velocity target if there is one. Zero otherwise
    */
-  units::turns_per_second_t GetVelocityTarget() { return _velocityTarget; };
+  units::revolutions_per_minute_t GetVelocityTarget() { return _velocityTarget; };
 
   /**
    * Get the closed loop position error (current position - target position) if there is one.
@@ -149,7 +148,7 @@ class ICSpark : public wpi::Sendable {
    * Get the closed loop velocity error (current velocity - target velocity) if there is one.
    * Zero otherwise.
    */
-  units::turns_per_second_t GetVelError() { return GetVelocity() - _velocityTarget; }
+  units::revolutions_per_minute_t GetVelError() { return GetVelocity() - _velocityTarget; }
 
   /**
    * Calculates how much voltage the spark max would be giving to the attached motor given its
@@ -186,7 +185,7 @@ class ICSpark : public wpi::Sendable {
    * filtering.
    * @param position - The externally calculated position in units after conversion.
    */
-  void IterateSim(units::turns_per_second_t velocity, units::turn_t position);
+  void IterateSim(units::revolutions_per_minute_t velocity, units::turn_t position);
 
   /**
    * Gets the current closed loop control type.
@@ -196,7 +195,7 @@ class ICSpark : public wpi::Sendable {
   /**
    * Get the velocity of the motor.
    */
-  units::turns_per_second_t GetVelocity();
+  units::revolutions_per_minute_t GetVelocity();
 
   /**
    * Get the position of the motor.
@@ -240,18 +239,20 @@ class ICSpark : public wpi::Sendable {
   /**
    * Configure the maximum velocity constraint for motion profiles. This includes the on-controller
    * MAX Motion mode and the on-rio motion profiles.
+   * This uses the Set Parameter API and should be used infrequently.
    *
    * @param maxVelocity The maxmimum velocity for the motion profile.
    */
-  void SetMotionMaxVel(units::turns_per_second_t maxVelocity);
+  void SetMotionMaxVel(units::revolutions_per_minute_t maxVelocity);
 
   /**
    * Configure the maximum acceleration constraint for motion profiles. This includes the
    * on-controller MAX Motion mode and the on-rio motion profiles.
+   * This uses the Set Parameter API and should be used infrequently.
    *
    * @param maxAcceleration The maxmimum acceleration for the motion profile.
    */
-  void SetMotionMaxAccel(units::turns_per_second_squared_t maxAcceleration);
+  void SetMotionMaxAccel(units::revolutions_per_minute_per_second_t maxAcceleration);
 
   /**
    * Set the Proportional gain for PID feedback control. This uses the Set Parameter API and should
@@ -290,8 +291,8 @@ class ICSpark : public wpi::Sendable {
    * @param A Voltage to travel at a desired acceleration.
    */
   void SetFeedforwardGains(units::volt_t S = 0_V, units::volt_t G = 0_V,
-                           bool gravityIsRotational = false, VoltsPerTps V = 0_V / 1_tps,
-                           VoltsPerTpsSq A = 0_V / 1_tr_per_s_sq);
+                           bool gravityIsRotational = false, VoltsPerRpm V = 0_V / 1_tps,
+                           VoltsPerRpmPerS A = 0_V / 1_tr_per_s_sq);
   
   /**
    * Set the Static Friction gain constant of the feed forward model.
@@ -322,14 +323,14 @@ class ICSpark : public wpi::Sendable {
    *
    * @param V Voltage to travel at a desired velocity.
    */
-  void SetFeedforwardVelocity(VoltsPerTps V);
+  void SetFeedforwardVelocity(VoltsPerRpm V);
   
   /**
    * Set the Acceleration gain constant of the feed forward model.
    * 
    * @param A Voltage to travel at a desired acceleration.
    */
-  void SetFeedforwardAcceleration(VoltsPerTpsSq A);
+  void SetFeedforwardAcceleration(VoltsPerRpmPerS A);
 
   /**
    * Switch to using an external absolute encoder connected to the data port on
@@ -360,7 +361,7 @@ class ICSpark : public wpi::Sendable {
    *
    * @param tolerance The tolerance to be considered on target
    */
-  bool OnVelTarget(units::turns_per_second_t tolerance) {
+  bool OnVelTarget(units::revolutions_per_minute_t tolerance) {
     return units::math::abs(GetVelError()) < tolerance;
   }
 
@@ -430,8 +431,8 @@ class ICSpark : public wpi::Sendable {
   units::volt_t _feedforwardStaticFriction = 0_V;
   units::volt_t _feedforwardLinearGravity = 0_V;
   units::volt_t _feedforwardRotationalGravity = 0_V;
-  VoltsPerTps _feedforwardVelocity = 0_V / 1_tps;
-  VoltsPerTpsSq _feedforwardAcceleration = 0_V / 1_tr_per_s_sq;
+  VoltsPerRpm _feedforwardVelocity = 0_V / 1_rpm;
+  VoltsPerRpmPerS _feedforwardAcceleration = 0_V / 1_rev_per_m_per_s;
   units::volt_t _arbFeedForward = 0.0_V;
   units::volt_t _latestModelFeedForward = 0.0_V;
 
@@ -440,7 +441,7 @@ class ICSpark : public wpi::Sendable {
   units::turn_t _positionTarget{0};
   units::turns_per_second_t _velocityTarget{0};
   units::volt_t _voltageTarget{0};
-  frc::TrapezoidProfile<units::turns> _motionProfile{{0_tps, 0_tr_per_s_sq}};
+  frc::TrapezoidProfile<units::turns> _motionProfile{{0_rpm, 0_rev_per_m_per_s}};
   MPState CalcNextMotionTarget(MPState current, units::turn_t goalPosition,
                                units::second_t lookahead = 20_ms);
   MPState _latestMotionTarget;

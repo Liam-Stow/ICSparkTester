@@ -6,8 +6,8 @@ Arm::Arm() {
   frc::SmartDashboard::PutData("Arm", &_motor);
 
   ICSparkConfig config;
-  config.encoder.positionConversionFactor = GEARING;
-  config.encoder.velocityConversionFactor = GEARING / 60.0;
+  config.encoder.positionConversionFactor = 1.0 / GEARING;
+  config.encoder.velocityConversionFactor = 1.0 / GEARING / 60.0;
   config.closedLoop.slots[0].p = kP;
   config.closedLoop.slots[0].maxMotion.maxVelocity = 1_tps;
   config.closedLoop.slots[0].maxMotion.maxAcceleration = 1_tr_per_s_sq;
@@ -20,7 +20,7 @@ Arm::Arm() {
 };
 
 void Arm::Periodic() {
-  _motor.UpdateControls();
+  // _motor.UpdateControls();
 }
 
 void Arm::SimulationPeriodic() {

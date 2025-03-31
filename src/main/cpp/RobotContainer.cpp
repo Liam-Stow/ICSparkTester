@@ -2,14 +2,15 @@
 #include <frc2/command/Commands.h>
 
 #include "subsystems/Arm.h"
+#include "subsystems/Turret.h"
 
 RobotContainer::RobotContainer() {
   ConfigureBindings();
 }
 
 void RobotContainer::ConfigureBindings() {
-  _controller.A().WhileTrue(Arm::GetInstance().DriveWithDutyCycle(0.8));
-  _controller.B().WhileTrue(Arm::GetInstance().DriveWithDutyCycle(-0.5));
+  _controller.A().WhileTrue(Turret::GetInstance().MaxMotionTo(0_deg));
+  _controller.B().WhileTrue(Turret::GetInstance().MaxMotionTo(90_deg));
 
 }
 

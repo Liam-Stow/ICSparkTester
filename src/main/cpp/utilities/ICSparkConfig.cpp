@@ -16,6 +16,10 @@ void ICSparkConfig::FillREVConfig(rev::spark::SparkBaseConfig& config) const {
   if (smartCurrentStallLimit && smartCurrentfreeLimit && smartCurrentVelocityLimit)
     config.SmartCurrentLimit(smartCurrentStallLimit->value(), smartCurrentfreeLimit->value(),
                              smartCurrentVelocityLimit->value());
+  if (smartCurrentStallLimit && !smartCurrentfreeLimit && !smartCurrentVelocityLimit)
+    config.SmartCurrentLimit(smartCurrentStallLimit->value());
+  if (smartCurrentStallLimit && smartCurrentfreeLimit && !smartCurrentVelocityLimit)
+    config.SmartCurrentLimit(smartCurrentStallLimit->value(), smartCurrentfreeLimit->value());
   if (secondaryCurrentLimit && secondaryCurrentLimitChopCycles)
     config.SecondaryCurrentLimit(secondaryCurrentLimit->value(), *secondaryCurrentLimitChopCycles);
   if (openLoopRampRate)
@@ -28,6 +32,8 @@ void ICSparkConfig::FillREVConfig(rev::spark::SparkBaseConfig& config) const {
     config.DisableVoltageCompensation();
   if (followCanId && followInverted)
     config.Follow(*followCanId, *followInverted);
+  if (followCanId)
+    config.Follow(*followCanId);
 
   // Absolute Encoder
   if (absoluteEncoder.inverted)

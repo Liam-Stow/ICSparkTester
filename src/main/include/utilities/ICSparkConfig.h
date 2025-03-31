@@ -22,8 +22,8 @@ struct ClosedLoopSlotConfig {
   std::optional<double> minOutput = std::nullopt;
   std::optional<double> maxOutput = std::nullopt;
   struct {
-    std::optional<units::turns_per_second_t> maxVelocity = std::nullopt;
-    std::optional<units::turns_per_second_squared_t> maxAcceleration = std::nullopt;
+    std::optional<units::revolutions_per_minute_t> maxVelocity = std::nullopt;
+    std::optional<units::revolutions_per_minute_per_second_t> maxAcceleration = std::nullopt;
     std::optional<units::turn_t> allowedClosedLoopError = std::nullopt;
     std::optional<rev::spark::MAXMotionConfig::MAXMotionPositionMode> positionMode = std::nullopt;
   } maxMotion = {};
@@ -33,16 +33,16 @@ struct ICSparkConfig {
   // Top level configs
   std::optional<bool> inverted;
   std::optional<rev::spark::SparkBaseConfig::IdleMode> idleMode = std::nullopt;
-  std::optional<units::ampere_t> smartCurrentStallLimit = 40_A; // Safe-ish default
-  std::optional<units::ampere_t> smartCurrentfreeLimit = 0_A;
-  std::optional<units::turns_per_second_t> smartCurrentVelocityLimit = 20000_rpm;
+  std::optional<units::ampere_t> smartCurrentStallLimit = std::nullopt;
+  std::optional<units::ampere_t> smartCurrentfreeLimit = std::nullopt;
+  std::optional<units::turns_per_second_t> smartCurrentVelocityLimit = std::nullopt;
   std::optional<units::ampere_t> secondaryCurrentLimit = std::nullopt;
-  std::optional<int> secondaryCurrentLimitChopCycles = 0;
+  std::optional<int> secondaryCurrentLimitChopCycles = std::nullopt;
   std::optional<units::second_t> openLoopRampRate = std::nullopt;
   std::optional<units::second_t> closedLoopRampRate = std::nullopt;
   std::optional<units::volt_t> voltageCompensationNominalVoltage = std::nullopt;
   std::optional<int> followCanId = std::nullopt;
-  std::optional<bool> followInverted = false;
+  std::optional<bool> followInverted = std::nullopt;
 
   // Absolute Encoder
   struct {
@@ -78,7 +78,7 @@ struct ICSparkConfig {
   struct {
     std::optional<bool> inverted = std::nullopt;
     std::optional<double> positionConversionFactor = std::nullopt;
-    std::optional<double> velocityConversionFactor = 1/60.0; // Transform RPM to RPS by default
+    std::optional<double> velocityConversionFactor = std::nullopt;
     std::optional<int> quadratureAverageDepth = std::nullopt;
     std::optional<units::millisecond_t> quadratureMeasurementPeriod = std::nullopt;
     std::optional<int> uvwAverageDepth = std::nullopt;
