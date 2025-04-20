@@ -9,12 +9,13 @@ Arm::Arm() {
   config.encoder.positionConversionFactor = 1.0 / GEARING;
   config.encoder.velocityConversionFactor = 1.0 / GEARING;
   config.closedLoop.slots[0].p = 0.4;
-  config.closedLoop.slots[0].maxMotion.maxVelocity = 30_tps;
-  config.closedLoop.slots[0].maxMotion.maxAcceleration = 200_tr_per_s_sq;
+  config.closedLoop.slots[0].maxMotion.maxVelocity = 300_rpm;
+  config.closedLoop.slots[0].maxMotion.maxAcceleration = 100_rev_per_m_per_s;
   config.smartCurrentStallLimit = 100_A;
+  config.feedforward.rotationalGravity = 0.6_V;
+  config.feedforward.velocity = 0.049_V / 1_rpm;
+  config.feedforward.acceleration = 0.003_V / 1_rev_per_m_per_s;
   _motor.OverwriteConfig(config);
-
-  _motor.SetFeedforwardGains(0.0_V, 0.6_V, true, 0.047_V / 1_rpm);
 
   _motor.SetPosition(STARTING_ANGLE);
 };

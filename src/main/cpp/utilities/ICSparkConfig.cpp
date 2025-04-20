@@ -219,6 +219,13 @@ void ICSparkConfig::Adjust(const ICSparkConfig& other) {
     MergeOptional(followCanId, other.followCanId);
     MergeOptional(followInverted, other.followInverted);
 
+    // Feedforward
+    MergeOptional(feedforward.staticFriction, other.feedforward.staticFriction);
+    MergeOptional(feedforward.linearGravity, other.feedforward.linearGravity);
+    MergeOptional(feedforward.rotationalGravity, other.feedforward.rotationalGravity);
+    MergeOptional(feedforward.velocity, other.feedforward.velocity);
+    MergeOptional(feedforward.acceleration, other.feedforward.acceleration);
+
     // Absolute Encoder
     MergeOptional(absoluteEncoder.inverted, other.absoluteEncoder.inverted);
     MergeOptional(absoluteEncoder.positionConversionFactor, other.absoluteEncoder.positionConversionFactor);

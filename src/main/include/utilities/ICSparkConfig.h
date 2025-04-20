@@ -29,7 +29,13 @@ struct ClosedLoopSlotConfig {
   } maxMotion = {};
 };
 
+
 struct ICSparkConfig {
+  using VoltsPerRpm = units::unit_t<units::compound_unit<
+      units::volts, units::inverse<units::revolutions_per_minute>>>;
+  using VoltsPerRpmPerS = units::unit_t<units::compound_unit<
+      units::volts, units::inverse<units::revolutions_per_minute_per_second>>>;
+
   // Top level configs
   std::optional<bool> inverted;
   std::optional<rev::spark::SparkBaseConfig::IdleMode> idleMode = std::nullopt;
@@ -43,6 +49,15 @@ struct ICSparkConfig {
   std::optional<units::volt_t> voltageCompensationNominalVoltage = std::nullopt;
   std::optional<int> followCanId = std::nullopt;
   std::optional<bool> followInverted = std::nullopt;
+
+  // Feedfowrards (all onbard the rio, not sent to sparks) 
+  struct {
+    std::optional<units::volt_t> staticFriction = std::nullopt;
+    std::optional<units::volt_t> linearGravity = std::nullopt;
+    std::optional<units::volt_t> rotationalGravity = std::nullopt;
+    std::optional<VoltsPerRpm> velocity = std::nullopt;
+    std::optional<VoltsPerRpmPerS> acceleration = std::nullopt;
+  } feedforward;
 
   // Absolute Encoder
   struct {

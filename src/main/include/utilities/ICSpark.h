@@ -36,11 +36,6 @@ class ICSpark : public wpi::Sendable {
     kMotionProfile = 10
   };
 
-  using VoltsPerRpm = units::unit_t<units::compound_unit<
-      units::volts, units::inverse<units::revolutions_per_minute>>>;
-  using VoltsPerRpmPerS = units::unit_t<units::compound_unit<
-      units::volts, units::inverse<units::revolutions_per_minute_per_second>>>;
-
   /**
    * Create a new object to control a SPARK motor controller.
    *
@@ -239,102 +234,6 @@ class ICSpark : public wpi::Sendable {
   void SetVoltage(units::volt_t output);
 
   /**
-   * Configure the maximum velocity constraint for motion profiles. This includes the on-controller
-   * MAX Motion mode and the on-rio motion profiles.
-   * This uses the Set Parameter API and should be used infrequently.
-   *
-   * @param maxVelocity The maxmimum velocity for the motion profile.
-   */
-  void SetMotionMaxVel(units::revolutions_per_minute_t maxVelocity);
-
-  /**
-   * Configure the maximum acceleration constraint for motion profiles. This includes the
-   * on-controller MAX Motion mode and the on-rio motion profiles.
-   * This uses the Set Parameter API and should be used infrequently.
-   *
-   * @param maxAcceleration The maxmimum acceleration for the motion profile.
-   */
-  void SetMotionMaxAccel(units::revolutions_per_minute_per_second_t maxAcceleration);
-
-  /**
-   * Set the Proportional gain for PID feedback control. This uses the Set Parameter API and should
-   * be used infrequently.
-   *
-   * @param P The proportional gain value, must be positive
-   */
-  void SetFeedbackProportional(double P);
-
-  /**
-   * Set the Integral gain for PID feedback control. This uses the Set Parameter API and should
-   * be used infrequently.
-   *
-   * @param I The Integral gain value, must be positive
-   */
-  void SetFeedbackIntegral(double I);
-
-  /**
-   * Set the Derivative gain for PID feedback control. This uses the Set Parameter API and should
-   * be used infrequently.
-   *
-   * @param D The Derivative gain value, must be positive
-   */
-  void SetFeedbackDerivative(double D);
-
-  /**
-   * Set the Static Friction, Gravity, Velocity and Acceleration gain constants of the feed forward
-   * model. To apply voltages from the feed forward model, call UpdateControls() periodically.
-   *
-   * @param S Constant voltage to overcome static friction in the system. Sign of applied voltage is
-   * determined by direction of rotation.
-   * @param G Voltage to overcome gravity in the system. Can be linear or rotational depending on the 
-   * value of gravityIsRotational.  
-   * @param gravityIsRotational Whether to use rotational gravity or linear gravity
-   * @param V Voltage to travel at a desired velocity.
-   * @param A Voltage to travel at a desired acceleration.
-   */
-  void SetFeedforwardGains(units::volt_t S = 0_V, units::volt_t G = 0_V,
-                           bool gravityIsRotational = false, VoltsPerRpm V = 0_V / 1_tps,
-                           VoltsPerRpmPerS A = 0_V / 1_rev_per_m_per_s);
-  
-  /**
-   * Set the Static Friction gain constant of the feed forward model.
-   * 
-   * @param S Constant voltage to overcome static friction in the system.
-   */
-  void SetFeedforwardStaticFriction(units::volt_t S);
-
-  /**
-   * Set the Linear Gravity gain constant of the feed forward model. linearG is a constant voltage
-   * that is always applied, regardless of direction of travel. Useful on elevators.
-   * 
-   * @param linearG Voltage to overcome linear gravity in the system.
-   */
-  void SetFeedforwardLinearGravity(units::volt_t linearG);
-
-  /**
-   * Set the Rotational Gravity gain constant of the feed forward model. Gravity compensation
-   * voltage is calculated as rotationalG * cos(angle). Meaning, rotationalG should be the voltage 
-   * to compensate gravity when the mechanism is at 0 degrees. Useful on arms.
-   *
-   * @param rotationalG Voltage to overcome rotational gravity in the system.
-   */
-  void SetFeedforwardRotationalGravity(units::volt_t rotationalG);
-
-  /**
-   * Set the Velocity gain constant of the feed forward model.
-   *
-   * @param V Voltage to travel at a desired velocity.
-   */
-  void SetFeedforwardVelocity(VoltsPerRpm V);
-  
-  /**
-   * Set the Acceleration gain constant of the feed forward model.
-   * 
-   * @param A Voltage to travel at a desired acceleration.
-   */
-  void SetFeedforwardAcceleration(VoltsPerRpmPerS A);
-
-  /**
    * Switch to using an external absolute encoder connected to the data port on
    * the SPARK for all encoder calls.
    *
@@ -409,7 +308,6 @@ class ICSpark : public wpi::Sendable {
    */
   rev::REVLibError OverwriteConfig(ICSparkConfig &config);
 
-
   // Sendable setup, called automatically when this is passed into smartDashbaord::PutData()
   void InitSendable(wpi::SendableBuilder& builder) override;
   
@@ -421,6 +319,86 @@ class ICSpark : public wpi::Sendable {
   }
 
  private:
+  /**
+   * Configure the maximum velocity constraint for motion profiles. This includes the on-controller
+   * MAX Motion mode and the on-rio motion profiles.
+   * This uses the Set Parameter API and should be used infrequently.
+   *
+   * @param maxVelocity The maxmimum velocity for the motion profile.
+   */
+  void SetMotionMaxVel(units::revolutions_per_minute_t maxVelocity);
+
+  /**
+   * Configure the maximum acceleration constraint for motion profiles. This includes the
+   * on-controller MAX Motion mode and the on-rio motion profiles.
+   * This uses the Set Parameter API and should be used infrequently.
+   *
+   * @param maxAcceleration The maxmimum acceleration for the motion profile.
+   */
+  void SetMotionMaxAccel(units::revolutions_per_minute_per_second_t maxAcceleration);
+
+  /**
+   * Set the Proportional gain for PID feedback control. This uses the Set Parameter API and should
+   * be used infrequently.
+   *
+   * @param P The proportional gain value, must be positive
+   */
+  void TuneFeedbackProportional(double P);
+
+  /**
+   * Set the Integral gain for PID feedback control. This uses the Set Parameter API and should
+   * be used infrequently.
+   *
+   * @param I The Integral gain value, must be positive
+   */
+  void TuneFeedbackIntegral(double I);
+
+  /**
+   * Set the Derivative gain for PID feedback control. This uses the Set Parameter API and should
+   * be used infrequently.
+   *
+   * @param D The Derivative gain value, must be positive
+   */
+  void TuneFeedbackDerivative(double D);
+
+  /**
+   * Set the Static Friction gain constant of the feed forward model.
+   * 
+   * @param S Constant voltage to overcome static friction in the system.
+   */
+  void TuneFeedforwardStaticFriction(units::volt_t S);
+
+  /**
+   * Set the Linear Gravity gain constant of the feed forward model. linearG is a constant voltage
+   * that is always applied, regardless of direction of travel. Useful on elevators.
+   * 
+   * @param linearG Voltage to overcome linear gravity in the system.
+   */
+  void TuneFeedforwardLinearGravity(units::volt_t linearG);
+
+  /**
+   * Set the Rotational Gravity gain constant of the feed forward model. Gravity compensation
+   * voltage is calculated as rotationalG * cos(angle). Meaning, rotationalG should be the voltage 
+   * to compensate gravity when the mechanism is at 0 degrees. Useful on arms.
+   *
+   * @param rotationalG Voltage to overcome rotational gravity in the system.
+   */
+  void TuneFeedforwardRotationalGravity(units::volt_t rotationalG);
+
+  /**
+   * Set the Velocity gain constant of the feed forward model.
+   *
+   * @param V Voltage to travel at a desired velocity.
+   */
+  void TuneFeedforwardVelocity(ICSparkConfig::VoltsPerRpm V);
+  
+  /**
+   * Set the Acceleration gain constant of the feed forward model.
+   * 
+   * @param A Voltage to travel at a desired acceleration.
+   */
+  void TuneFeedforwardAcceleration(ICSparkConfig::VoltsPerRpmPerS A);
+
   rev::spark::SparkBase* _spark;
   ICSparkConfig _configCache;
 
@@ -430,11 +408,6 @@ class ICSpark : public wpi::Sendable {
   ICSparkEncoder _encoder;
 
   // Feedforward gains
-  units::volt_t _feedforwardStaticFriction = 0_V;
-  units::volt_t _feedforwardLinearGravity = 0_V;
-  units::volt_t _feedforwardRotationalGravity = 0_V;
-  VoltsPerRpm _feedforwardVelocity = 0_V / 1_rpm;
-  VoltsPerRpmPerS _feedforwardAcceleration = 0_V / 1_rev_per_m_per_s;
   units::volt_t _arbFeedForward = 0.0_V;
   units::volt_t _latestModelFeedForward = 0.0_V;
 

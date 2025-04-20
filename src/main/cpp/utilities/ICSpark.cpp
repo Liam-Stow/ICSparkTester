@@ -23,26 +23,26 @@ ICSpark::ICSpark(rev::spark::SparkBase* spark, rev::spark::SparkRelativeEncoder&
 
 void ICSpark::InitSendable(wpi::SendableBuilder& builder) {
   // clang-format off
-  //----------------------- Label ------------------------ Getter ------------------------------------------------ Setter -------------------------------------------------
-  builder.AddDoubleProperty("Position",                   [&] { return GetPosition().value(); },                  nullptr);
-  builder.AddDoubleProperty("Velocity",                   [&] { return GetVelocity().value(); },                  nullptr);
-  builder.AddDoubleProperty("Voltage",                    [&] { return GetMotorVoltage().value(); },              nullptr);
-  builder.AddDoubleProperty("Current",                    [&] { return GetStatorCurrent().value(); },             nullptr);
-  builder.AddDoubleProperty("Temperature",                [&] { return _spark->GetMotorTemperature(); },          nullptr);
-  builder.AddDoubleProperty("Position conversion factor", [&] { return _configCache.encoder.positionConversionFactor.value_or(1); }, nullptr);
-  builder.AddDoubleProperty("Velocity conversion factor", [&] { return _configCache.encoder.velocityConversionFactor.value_or(1); }, nullptr);
-  builder.AddDoubleProperty("Position Target",            [&] { return _positionTarget.value(); },                [&](double targ) { SetPositionTarget(targ*1_tr); });
-  builder.AddDoubleProperty("Velocity Target",            [&] { return _velocityTarget.value(); },                [&](double targ) { SetVelocityTarget(targ*1_tps); });
-  builder.AddDoubleProperty("Profile Position Target",    [&] { return _latestMotionTarget.position.value(); },   [&](double targ) { SetMotionProfileTarget(targ*1_tr); });
-  builder.AddDoubleProperty("Profile Velocity Target",    [&] { return _latestMotionTarget.velocity.value(); },   nullptr);
-  builder.AddDoubleProperty("Gains/FB P Gain",            [&] { return _rioPidController.GetP(); },               [&](double P) { SetFeedbackProportional(P); });
-  builder.AddDoubleProperty("Gains/FB I Gain",            [&] { return _rioPidController.GetI(); },               [&](double I) { SetFeedbackIntegral(I); });
-  builder.AddDoubleProperty("Gains/FB D Gain",            [&] { return _rioPidController.GetD(); },               [&](double D) { SetFeedbackDerivative(D); });
-  builder.AddDoubleProperty("Gains/FF S Gain",            [&] { return _feedforwardStaticFriction.value(); },     [&](double S) { SetFeedforwardStaticFriction(S*1_V); });
-  builder.AddDoubleProperty("Gains/FF V Gain",            [&] { return _feedforwardVelocity.value(); },           [&](double V) { SetFeedforwardVelocity(VoltsPerRpm{V}); });
-  builder.AddDoubleProperty("Gains/FF A Gain",            [&] { return _feedforwardAcceleration.value(); },       [&](double A) { SetFeedforwardAcceleration(VoltsPerRpmPerS{A}); });
-  builder.AddDoubleProperty("Gains/FF Linear G Gain",     [&] { return _feedforwardLinearGravity.value(); },      [&](double lG) { SetFeedforwardLinearGravity(lG*1_V); });
-  builder.AddDoubleProperty("Gains/FF Rotational G Gain", [&] { return _feedforwardRotationalGravity.value(); },  [&](double rG) { SetFeedforwardRotationalGravity(rG*1_V); });
+  //----------------------- Label ------------------------ Getter --------------------------------------------------------------------------------------- Setter -------------------------------------------------
+  builder.AddDoubleProperty("Position",                   [&] { return GetPosition().value(); },                                                          nullptr);
+  builder.AddDoubleProperty("Velocity",                   [&] { return GetVelocity().value(); },                                                          nullptr);
+  builder.AddDoubleProperty("Voltage",                    [&] { return GetMotorVoltage().value(); },                                                      nullptr);
+  builder.AddDoubleProperty("Current",                    [&] { return GetStatorCurrent().value(); },                                                     nullptr);
+  builder.AddDoubleProperty("Temperature",                [&] { return _spark->GetMotorTemperature(); },                                                  nullptr);
+  builder.AddDoubleProperty("Position conversion factor", [&] { return _configCache.encoder.positionConversionFactor.value_or(1); },                      nullptr);
+  builder.AddDoubleProperty("Velocity conversion factor", [&] { return _configCache.encoder.velocityConversionFactor.value_or(1); },                      nullptr);
+  builder.AddDoubleProperty("Position Target",            [&] { return _positionTarget.value(); },                                                        [&](double targ) { SetPositionTarget(targ*1_tr); });
+  builder.AddDoubleProperty("Velocity Target",            [&] { return _velocityTarget.value(); },                                                        [&](double targ) { SetVelocityTarget(targ*1_tps); });
+  builder.AddDoubleProperty("Profile Position Target",    [&] { return _latestMotionTarget.position.value(); },                                           [&](double targ) { SetMotionProfileTarget(targ*1_tr); });
+  builder.AddDoubleProperty("Profile Velocity Target",    [&] { return _latestMotionTarget.velocity.value(); },                                           nullptr);
+  builder.AddDoubleProperty("Gains/FB P Gain",            [&] { return _rioPidController.GetP(); },                                                       [&](double P) { TuneFeedbackProportional(P); });
+  builder.AddDoubleProperty("Gains/FB I Gain",            [&] { return _rioPidController.GetI(); },                                                       [&](double I) { TuneFeedbackIntegral(I); });
+  builder.AddDoubleProperty("Gains/FB D Gain",            [&] { return _rioPidController.GetD(); },                                                       [&](double D) { TuneFeedbackDerivative(D); });
+  builder.AddDoubleProperty("Gains/FF S Gain",            [&] { return _configCache.feedforward.staticFriction.value_or(0_V).value(); },                  [&](double S) { TuneFeedforwardStaticFriction(S*1_V); });
+  builder.AddDoubleProperty("Gains/FF Linear G Gain",     [&] { return _configCache.feedforward.linearGravity.value_or(0_V).value(); },                   [&](double lG) { TuneFeedforwardLinearGravity(lG*1_V); });
+  builder.AddDoubleProperty("Gains/FF Rotational G Gain", [&] { return _configCache.feedforward.rotationalGravity.value_or(0_V).value(); },               [&](double rG) { TuneFeedforwardRotationalGravity(rG*1_V); });
+  builder.AddDoubleProperty("Gains/FF V Gain",            [&] { return _configCache.feedforward.velocity.value_or(0_V/1_rpm).value(); },                  [&](double V) { TuneFeedforwardVelocity(ICSparkConfig::VoltsPerRpm{V}); });
+  builder.AddDoubleProperty("Gains/FF A Gain",            [&] { return _configCache.feedforward.acceleration.value_or(0_V/1_rev_per_m_per_s).value(); },  [&](double A) { TuneFeedforwardAcceleration(ICSparkConfig::VoltsPerRpmPerS{A}); });
   
   builder.AddDoubleProperty("Motion Config/Max vel",      
     [&] { return _configCache.closedLoop.slots[0].maxMotion.maxVelocity.value_or(0_rpm).value(); },              
@@ -219,9 +219,14 @@ void ICSpark::UpdateControls(units::second_t loopTime) {
 
 units::volt_t ICSpark::CalculateFeedforward(units::turn_t pos, units::revolutions_per_minute_t vel,
                                             units::revolutions_per_minute_per_second_t accel) {
-  return _feedforwardStaticFriction * wpi::sgn(vel) + _feedforwardLinearGravity +
-         _feedforwardRotationalGravity * units::math::cos(pos) + _feedforwardVelocity * vel +
-         _feedforwardAcceleration * accel;
+  auto staticFriction = _configCache.feedforward.staticFriction.value_or(0_V);
+  auto linearGravity = _configCache.feedforward.linearGravity.value_or(0_V);
+  auto rotationalGravity = _configCache.feedforward.rotationalGravity.value_or(0_V);
+  auto velocity = _configCache.feedforward.velocity.value_or(0_V/1_rpm);
+  auto acceleration = _configCache.feedforward.acceleration.value_or(0_V/1_rev_per_m_per_s);
+
+  return staticFriction * wpi::sgn(vel) + linearGravity +
+         rotationalGravity * units::math::cos(pos) + velocity * vel + acceleration * accel;
 }
 
 rev::spark::SparkLowLevel::ControlType ICSpark::GetREVControlType() {
@@ -260,54 +265,52 @@ ICSparkConfig ICSpark::UseAbsoluteEncoder(units::turn_t zeroOffset) {
   return config;
 }
 
-void ICSpark::SetFeedbackProportional(double P) {
+void ICSpark::TuneFeedbackProportional(double P) {
   ICSparkConfig config;
   config.closedLoop.slots[0].p = P;
-  AdjustConfig(config);
+  AdjustConfigNoPersist(config);
 }
 
-void ICSpark::SetFeedbackIntegral(double I) {
+void ICSpark::TuneFeedbackIntegral(double I) {
   ICSparkConfig config;
   config.closedLoop.slots[0].i = I;
-  AdjustConfig(config);
+  AdjustConfigNoPersist(config);
 }
 
-void ICSpark::SetFeedbackDerivative(double D) {
+void ICSpark::TuneFeedbackDerivative(double D) {
   ICSparkConfig config;
   config.closedLoop.slots[0].d = D;
-  AdjustConfig(config);
+  AdjustConfigNoPersist(config);
 }
 
-void ICSpark::SetFeedforwardGains(units::volt_t S, units::volt_t G, bool gravityIsRotational,
-                                  VoltsPerRpm V, VoltsPerRpmPerS A) {
-  SetFeedforwardStaticFriction(S);
-  SetFeedforwardVelocity(V);
-  SetFeedforwardAcceleration(A);
-  if (gravityIsRotational) {
-    SetFeedforwardRotationalGravity(G);
-  } else {
-    SetFeedforwardLinearGravity(G);
-  }
+void ICSpark::TuneFeedforwardStaticFriction(units::volt_t S) {
+  ICSparkConfig config;
+  config.feedforward.staticFriction = S;
+  AdjustConfigNoPersist(config);
 }
 
-void ICSpark::SetFeedforwardStaticFriction(units::volt_t S) {
-  _feedforwardStaticFriction = S;
+void ICSpark::TuneFeedforwardLinearGravity(units::volt_t linearG) {
+  ICSparkConfig config;
+  config.feedforward.linearGravity = linearG;
+  AdjustConfigNoPersist(config);
 }
 
-void ICSpark::SetFeedforwardLinearGravity(units::volt_t linearG) {
-  _feedforwardLinearGravity = linearG;
+void ICSpark::TuneFeedforwardRotationalGravity(units::volt_t rotationalG) {
+  ICSparkConfig config;
+  config.feedforward.rotationalGravity = rotationalG;
+  AdjustConfigNoPersist(config);
 }
 
-void ICSpark::SetFeedforwardRotationalGravity(units::volt_t rotationalG) {
-  _feedforwardRotationalGravity = rotationalG;
+void ICSpark::TuneFeedforwardVelocity(ICSparkConfig::VoltsPerRpm V) {
+  ICSparkConfig config;
+  config.feedforward.velocity = V;
+  AdjustConfigNoPersist(config);
 }
 
-void ICSpark::SetFeedforwardVelocity(VoltsPerRpm V) {
-  _feedforwardVelocity = V;
-}
-
-void ICSpark::SetFeedforwardAcceleration(VoltsPerRpmPerS A) {
-  _feedforwardAcceleration = A;
+void ICSpark::TuneFeedforwardAcceleration(ICSparkConfig::VoltsPerRpmPerS A) {
+  ICSparkConfig config;
+  config.feedforward.acceleration = A;
+  AdjustConfigNoPersist(config);
 }
 
 units::revolutions_per_minute_t ICSpark::GetVelocity() {
