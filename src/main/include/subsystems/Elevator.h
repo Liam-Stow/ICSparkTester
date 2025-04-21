@@ -19,6 +19,8 @@ class Elevator : public frc2::SubsystemBase {
   units::turn_t HeightToTurns(units::meter_t height);
   units::meters_per_second_t RPMToMPS(units::revolutions_per_minute_t rpm);
   units::revolutions_per_minute_t MPSToRPM(units::meters_per_second_t mps);
+  units::meter_t GetHeight();
+  double GetMotorDutyCycle();
 
   // Commands
   frc2::CommandPtr MaxMotionTo(units::meter_t height);

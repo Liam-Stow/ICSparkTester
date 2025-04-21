@@ -308,6 +308,13 @@ class ICSpark : public wpi::Sendable {
    */
   rev::REVLibError OverwriteConfig(ICSparkConfig &config);
 
+  /**
+   * Read the current configuration of the SPARK.
+   * 
+   * @return The current SPARK configuration, using the ICSparkConfig format.
+   */
+  ICSparkConfig GetCachedConfig() const;
+
   // Sendable setup, called automatically when this is passed into smartDashbaord::PutData()
   void InitSendable(wpi::SendableBuilder& builder) override;
   

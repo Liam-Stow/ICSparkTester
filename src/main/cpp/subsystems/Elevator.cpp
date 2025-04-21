@@ -7,9 +7,9 @@ Elevator::Elevator() {
     ICSparkConfig config;
     config.encoder.positionConversionFactor = 1.0 / GEARING;
     config.encoder.velocityConversionFactor = 1.0 / GEARING;
-    config.closedLoop.slots[0].p = 0.1;
-    config.closedLoop.slots[0].maxMotion.maxVelocity = 30_rpm;
-    config.closedLoop.slots[0].maxMotion.maxAcceleration = 200_rev_per_m_per_s;
+    config.closedLoop.slots[0].p = 1;
+    config.closedLoop.slots[0].maxMotion.maxVelocity = 500_rpm;
+    config.closedLoop.slots[0].maxMotion.maxAcceleration = 500_rev_per_m_per_s;
     config.smartCurrentStallLimit = 100_A;
     config.feedforward.linearGravity = 0.16_V;
     config.feedforward.velocity = 0.02_V / 1_rpm;
@@ -63,4 +63,12 @@ frc2::CommandPtr Elevator::PIDTo(units::meter_t height) {
 frc2::CommandPtr Elevator::DriveWithDutyCycle(double dutyCycle) {
   return StartEnd([this, dutyCycle] { _motor.SetDutyCycle(dutyCycle); },
                   [this] { _motor.StopMotor(); });
+}
+
+units::meter_t Elevator::GetHeight() {
+  return TurnsToHeight(_motor.GetPosition());
+}
+
+double Elevator::GetMotorDutyCycle() {
+  return _motor.GetDutyCycle();
 }

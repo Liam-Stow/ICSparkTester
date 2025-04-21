@@ -52,3 +52,7 @@ frc2::CommandPtr Arm::DriveWithDutyCycle(double dutyCycle) {
   return StartEnd([this, dutyCycle] { _motor.SetDutyCycle(dutyCycle); },
                   [this] { _motor.StopMotor(); });
 }
+
+units::turn_t Arm::GetPosition() { return _motor.GetPosition(); }
+
+units::turns_per_second_t Arm::GetVelocity() { return _motor.GetVelocity(); }

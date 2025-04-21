@@ -26,6 +26,7 @@ void ICSpark::InitSendable(wpi::SendableBuilder& builder) {
   //----------------------- Label ------------------------ Getter --------------------------------------------------------------------------------------- Setter -------------------------------------------------
   builder.AddDoubleProperty("Position",                   [&] { return GetPosition().value(); },                                                          nullptr);
   builder.AddDoubleProperty("Velocity",                   [&] { return GetVelocity().value(); },                                                          nullptr);
+  builder.AddDoubleProperty("Duty Cycle",                 [&] { return GetDutyCycle(); },                                                                 nullptr);
   builder.AddDoubleProperty("Voltage",                    [&] { return GetMotorVoltage().value(); },                                                      nullptr);
   builder.AddDoubleProperty("Current",                    [&] { return GetStatorCurrent().value(); },                                                     nullptr);
   builder.AddDoubleProperty("Temperature",                [&] { return _spark->GetMotorTemperature(); },                                                  nullptr);
@@ -101,6 +102,10 @@ rev::REVLibError ICSpark::OverwriteConfig(ICSparkConfig &config) {
   return Configure(config, rev::spark::SparkBase::ResetMode::kResetSafeParameters,
                             rev::spark::SparkBase::PersistMode::kPersistParameters);
 };
+
+ICSparkConfig ICSpark::GetCachedConfig() const {
+  return _configCache;
+}
 
 void ICSpark::SetPosition(units::turn_t position) {
   _encoder.SetPosition(position.value());

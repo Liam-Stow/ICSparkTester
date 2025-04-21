@@ -1,42 +1,36 @@
 #include "RobotContainer.h"
 #include <frc2/command/Commands.h>
 
-#include "subsystems/Arm.h"
-#include "subsystems/Elevator.h"
-#include "subsystems/Feeder.h"
-#include "subsystems/Flywheel.h"
-#include "subsystems/Turret.h"
-
 RobotContainer::RobotContainer() {
   ConfigureBindings();
 }
 
 void RobotContainer::ConfigureBindings() {
   // Arm
-  _armController.A().WhileTrue(Arm::GetInstance().MaxMotionTo(0_deg));
-  _armController.B().WhileTrue(Arm::GetInstance().WPIProfileTo(90_deg));
-  _armController.X().WhileTrue(Arm::GetInstance().PIDTo(180_deg));
-  _armController.Y().WhileTrue(Arm::GetInstance().DriveWithDutyCycle(-1));
+  _armController.A().WhileTrue(_arm.MaxMotionTo(0_deg));
+  _armController.B().WhileTrue(_arm.WPIProfileTo(90_deg));
+  _armController.X().WhileTrue(_arm.PIDTo(180_deg));
+  _armController.Y().WhileTrue(_arm.DriveWithDutyCycle(-1));
 
   // Elevator
-  _elevatorController.A().WhileTrue(Elevator::GetInstance().MaxMotionTo(1_m));
-  _elevatorController.B().WhileTrue(Elevator::GetInstance().WPIProfileTo(0_m));
-  _elevatorController.X().WhileTrue(Elevator::GetInstance().PIDTo(0.5_m));
-  _elevatorController.Y().WhileTrue(Elevator::GetInstance().DriveWithDutyCycle(-1));
+  _elevatorController.A().WhileTrue(_elevator.MaxMotionTo(0.5_m));
+  _elevatorController.B().WhileTrue(_elevator.WPIProfileTo(0_m));
+  _elevatorController.X().WhileTrue(_elevator.PIDTo(0.5_m));
+  _elevatorController.Y().WhileTrue(_elevator.DriveWithDutyCycle(0.5));
 
   // Feeder
-  _feederController.A().WhileTrue(Feeder::GetInstance().FeedIn());
-  _feederController.B().WhileTrue(Feeder::GetInstance().FeedOut());
+  _feederController.A().WhileTrue(_feeder.FeedIn());
+  _feederController.B().WhileTrue(_feeder.FeedOut());
 
   // Flywheel
-  _flywheelController.A().WhileTrue(Flywheel::GetInstance().SpinAt(1000_rpm));
-  _flywheelController.B().WhileTrue(Flywheel::GetInstance().SpinAt(-1000_rpm));
+  _flywheelController.A().WhileTrue(_flywheel.SpinAt(1000_rpm));
+  _flywheelController.B().WhileTrue(_flywheel.SpinAt(-1000_rpm));
 
   // Turret
-  _turretController.A().WhileTrue(Turret::GetInstance().MaxMotionTo(0_deg));
-  _turretController.B().WhileTrue(Turret::GetInstance().WPIProfileTo(90_deg));
-  _turretController.X().WhileTrue(Turret::GetInstance().PIDTo(180_deg));
-  _turretController.Y().WhileTrue(Turret::GetInstance().DriveWithDutyCycle(-1));
+  _turretController.A().WhileTrue(_turret.MaxMotionTo(0_deg));
+  _turretController.B().WhileTrue(_turret.WPIProfileTo(90_deg));
+  _turretController.X().WhileTrue(_turret.PIDTo(180_deg));
+  _turretController.Y().WhileTrue(_turret.DriveWithDutyCycle(-1));
 
 }
 

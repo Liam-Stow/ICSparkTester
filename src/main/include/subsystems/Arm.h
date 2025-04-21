@@ -7,13 +7,14 @@
 #include "utilities/ICSparkFlex.h"
 #include "Constants.h"
 
+
 class Arm : public frc2::SubsystemBase {
  public:
   Arm();
-  static Arm& GetInstance() { static Arm inst; return inst; }
-
   void Periodic() override;
   void SimulationPeriodic() override;
+  units::turn_t GetPosition();
+  units::turns_per_second_t GetVelocity();
 
   // Commands
   frc2::CommandPtr MaxMotionTo(units::turn_t angle);

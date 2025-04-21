@@ -2,6 +2,11 @@
 
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/button/CommandXboxController.h>
+#include "subsystems/Arm.h"
+#include "subsystems/Elevator.h"
+#include "subsystems/Feeder.h"
+#include "subsystems/Flywheel.h"
+#include "subsystems/Turret.h"
 
 class RobotContainer {
  public:
@@ -17,4 +22,10 @@ class RobotContainer {
   frc2::CommandXboxController _feederController{2};
   frc2::CommandXboxController _flywheelController{3};
   frc2::CommandXboxController _turretController{4};
+
+  Arm _arm;
+  Elevator _elevator;
+  Feeder _feeder;
+  Flywheel _flywheel;
+  Turret _turret;
 };
