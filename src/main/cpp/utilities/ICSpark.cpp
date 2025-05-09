@@ -224,14 +224,13 @@ void ICSpark::UpdateControls(units::second_t loopTime) {
 
 units::volt_t ICSpark::CalculateFeedforward(units::turn_t pos, units::revolutions_per_minute_t vel,
                                             units::revolutions_per_minute_per_second_t accel) {
-  auto staticFriction = _configCache.feedforward.staticFriction.value_or(0_V);
-  auto linearGravity = _configCache.feedforward.linearGravity.value_or(0_V);
-  auto rotationalGravity = _configCache.feedforward.rotationalGravity.value_or(0_V);
-  auto velocity = _configCache.feedforward.velocity.value_or(0_V/1_rpm);
-  auto acceleration = _configCache.feedforward.acceleration.value_or(0_V/1_rev_per_m_per_s);
+  auto kS = _configCache.feedforward.staticFriction.value_or(0_V);
+  auto kLG = _configCache.feedforward.linearGravity.value_or(0_V);
+  auto kRG = _configCache.feedforward.rotationalGravity.value_or(0_V);
+  auto kV = _configCache.feedforward.velocity.value_or(0_V/1_rpm);
+  auto kA = _configCache.feedforward.acceleration.value_or(0_V/1_rev_per_m_per_s);
 
-  return staticFriction * wpi::sgn(vel) + linearGravity +
-         rotationalGravity * units::math::cos(pos) + velocity * vel + acceleration * accel;
+  return kS * wpi::sgn(vel) + kLG + kRG * units::math::cos(pos) + kV * vel + kA * accel;
 }
 
 rev::spark::SparkLowLevel::ControlType ICSpark::GetREVControlType() {
