@@ -416,7 +416,6 @@ class ICSpark : public wpi::Sendable {
 
   // Feedback control objects
   rev::spark::SparkClosedLoopController _sparkPidController{_spark->GetClosedLoopController()};
-  frc::PIDController _rioPidController{0, 0, 0};
   ICSparkEncoder _encoder;
 
   // Feedforward gains

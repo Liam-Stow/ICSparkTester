@@ -36,9 +36,9 @@ void ICSpark::InitSendable(wpi::SendableBuilder& builder) {
   builder.AddDoubleProperty("Velocity Target",            [&] { return _velocityTarget.value(); },                                                        [&](double targ) { SetVelocityTarget(targ*1_tps); });
   builder.AddDoubleProperty("Profile Position Target",    [&] { return _latestMotionTarget.position.value(); },                                           [&](double targ) { SetMotionProfileTarget(targ*1_tr); });
   builder.AddDoubleProperty("Profile Velocity Target",    [&] { return _latestMotionTarget.velocity.value(); },                                           nullptr);
-  builder.AddDoubleProperty("Gains/FB P Gain",            [&] { return _rioPidController.GetP(); },                                                       [&](double P) { TuneFeedbackProportional(P); });
-  builder.AddDoubleProperty("Gains/FB I Gain",            [&] { return _rioPidController.GetI(); },                                                       [&](double I) { TuneFeedbackIntegral(I); });
-  builder.AddDoubleProperty("Gains/FB D Gain",            [&] { return _rioPidController.GetD(); },                                                       [&](double D) { TuneFeedbackDerivative(D); });
+  builder.AddDoubleProperty("Gains/FB P Gain",            [&] { return _configCache.closedLoop.slots[0].p.value_or(0); },                                 [&](double P) { TuneFeedbackProportional(P); });
+  builder.AddDoubleProperty("Gains/FB I Gain",            [&] { return _configCache.closedLoop.slots[0].i.value_or(0); },                                 [&](double I) { TuneFeedbackIntegral(I); });
+  builder.AddDoubleProperty("Gains/FB D Gain",            [&] { return _configCache.closedLoop.slots[0].d.value_or(0); },                                 [&](double D) { TuneFeedbackDerivative(D); });
   builder.AddDoubleProperty("Gains/FF S Gain",            [&] { return _configCache.feedforward.staticFriction.value_or(0_V).value(); },                  [&](double S) { TuneFeedforwardStaticFriction(S*1_V); });
   builder.AddDoubleProperty("Gains/FF Linear G Gain",     [&] { return _configCache.feedforward.linearGravity.value_or(0_V).value(); },                   [&](double lG) { TuneFeedforwardLinearGravity(lG*1_V); });
   builder.AddDoubleProperty("Gains/FF Rotational G Gain", [&] { return _configCache.feedforward.rotationalGravity.value_or(0_V).value(); },               [&](double rG) { TuneFeedforwardRotationalGravity(rG*1_V); });
@@ -69,18 +69,6 @@ rev::REVLibError ICSpark::Configure(ICSparkConfig& config,
   _motionProfile = frc::TrapezoidProfile<units::turns>{
       {slot0.maxMotion.maxVelocity.value_or(0_tps),
        slot0.maxMotion.maxAcceleration.value_or(0_tr_per_s_sq)}};
-
-  // Wrapping settings for sim
-  if (_configCache.closedLoop.positionWrappingEnabled.value_or(false)) {
-    _rioPidController.EnableContinuousInput(
-        _configCache.closedLoop.positionWrappingMinInput.value_or(0_tr).value(),
-        _configCache.closedLoop.positionWrappingMaxInput.value_or(0_tr).value());
-  } else {
-    _rioPidController.DisableContinuousInput();
-  }
-
-  // Set the rio pid gains to match the spark config
-  _rioPidController.SetPID(slot0.p.value_or(0), slot0.i.value_or(0), slot0.d.value_or(0));
 
   // Run the configuration and return any errors
   rev::spark::SparkBaseConfig revConfig;
