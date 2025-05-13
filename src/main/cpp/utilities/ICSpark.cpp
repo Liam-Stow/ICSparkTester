@@ -194,8 +194,9 @@ void ICSpark::UpdateControls(units::second_t loopTime) {
       sparkTarget = _latestMotionTarget.position.value();
       break;
     case ControlType::kMaxMotion: {
-      // In Max Motion mode, we use the true, sensed current state state as the "current state"
+      // In Max Motion mode, we use the true, sensed state as the "current state"
       // and the sparkPIDController uses the overall target as its goal.
+      // source: https://github.com/wpilibsuite/2025Beta/discussions/27#discussioncomment-11513251
       MPState currentState = {GetPosition(), GetVelocity()};
       _latestMotionTarget = CalcNextMotionTarget(currentState, _positionTarget, loopTime);
       sparkTarget = _positionTarget.value();

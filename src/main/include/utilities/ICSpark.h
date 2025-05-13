@@ -39,9 +39,8 @@ class ICSpark : public wpi::Sendable {
   /**
    * Create a new object to control a SPARK motor controller.
    *
-   * @param currentLimit Value used for spark smart current limiting
-   * @param inbultEncoder rvalue reference to the encoder built into the NEO
    * @param spark Reference to the spark to control
+   * @param inbultEncoder The encoder built into the NEO
    */
   ICSpark(rev::spark::SparkBase* spark, rev::spark::SparkRelativeEncoder& inbuiltEncoder);
 
@@ -64,31 +63,38 @@ class ICSpark : public wpi::Sendable {
   void SetPositionTarget(units::turn_t target, units::volt_t arbFeedForward = 0.0_V);
 
   /**
-   * Sets a closed loop position target (aka reference or goal) for the motor to
-   * drive to using the Spark Max's Smart Motion control mode. This generates a
-   * profiled movement that accelerates and decelerates in a controlled way.
-   * This can reduce ware on components, limit current draw and is can be easier
-   * to tune. In this mode, you are actually controlling the velocity of the
-   * motor to follow a trapezoid (speeding up, staying constant, then slowing
-   * down) and as such the PID values should be tuned to follow a velocity
-   * target. Also consider using SetMotionProfileTarget() to compute a profile
-   * on the RoboRio and perform feedback control based on position.
-   *
+   * !! Must periodically call UpdateControls() !!
+   * Sets a closed loop position target (aka reference or goal) for the motor to drive to using the
+   * Spark's MAXMotion control mode. This generates a profiled movement that accelerates and
+   * decelerates in a controlled way. This can reduce ware on components, limit current draw and is
+   * easier to tune. Also consider using SetMotionProfileTarget() to compute a profile on the
+   * RoboRio and perform feedback control based on position.
+   * 
+   * Relies on periodic calls to UpdateControls() to update the feedforward model and log targets.
+   * 
    * @param target The target position drive to.
    *
-   * @param arbFeedforward A voltage from -32.0V to 32.0V which is applied to
-   * the motor after the result of the specified control mode. This value is
-   * added after the control mode, but before any current limits or ramp rates
+   * @param arbFeedforward A voltage from -32.0V to 32.0V which is applied to the motor after the
+   * result of the specified control mode. This value is added after the control mode, but before
+   * any current limits or ramp rates
    */
   void SetMaxMotionTarget(units::turn_t target, units::volt_t arbFeedForward = 0.0_V);
 
   /**
-   * Sets a closed loop position target (aka reference or goal) for the motor to
-   * drive to using a motion profile computed onboard the RoboRio and followed
-   * using the Spark Max's onboard PID position control.
-   * This generates a profiled movement that accelerates and decelerates in a controlled way. This
-   * can reduce ware on components, limit current draw and can be easier to tune.
+   * !! Must periodically call UpdateControls() !!
+   * Sets a closed loop position target (aka reference or goal) for the motor to drive to using a
+   * motion profile computed onboard the RoboRio and followed using the Spark's onboard PID position
+   * control. This generates a profiled movement that accelerates and decelerates in a controlled
+   * way. This allows model-based feedforward for faster response time, can reduce ware on
+   * components, limit current draw and is easier to tune.
    * 
+   * Relies on periodic calls to UpdateControls() to update the feedforward model and targets.
+   *
+   * @param target The target position drive to.
+   *
+   * @param arbFeedforward A voltage from -32.0V to 32.0V which is applied to the motor after the
+   * result of the specified control mode. This value is added after the control mode, but before
+   * any current limits or ramp rates
    */
   void SetMotionProfileTarget(units::turn_t target, units::volt_t arbFeedForward = 0.0_V);
 
@@ -105,7 +111,7 @@ class ICSpark : public wpi::Sendable {
 
   /**
    * Update motion profile targets and feedforward calculations. This is required to be called
-   * periodically when you use the Motion Profile control type or any feedforward gains.
+   * periodically when using MaxMotion or Motion Profile.
    *
    * @param loopTime The frequency at which this is being called. 20ms is the default loop time for
    * WPILib periodic functions.
@@ -113,8 +119,7 @@ class ICSpark : public wpi::Sendable {
   void UpdateControls(units::second_t loopTime = 20_ms);
 
   /**
-   * Calculate how many volts to send to the motor from the feedforward model configured with
-   * SetFeedforwardGains().
+   * Calculate how many volts to send to the motor from the confgured feedforward model.
    *
    * @param pos The position target
    * @param vel The velocity target
@@ -146,7 +151,7 @@ class ICSpark : public wpi::Sendable {
   units::revolutions_per_minute_t GetVelError() { return GetVelocity() - _velocityTarget; }
 
   /**
-   * Calculates how much voltage the spark max would be giving to the attached motor given its
+   * Calculates how much voltage the spark would be giving to the attached motor given its
    * current control type and PID configuration. Use this in conjunction with one of WPILib's
    * physics simulation classes.
    * (https://docs.wpilib.org/en/stable/docs/software/wpilib-tools/robot-simulation/physics-sim.html)
