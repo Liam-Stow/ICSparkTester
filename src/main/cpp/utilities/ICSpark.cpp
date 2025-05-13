@@ -364,14 +364,12 @@ bool ICSpark::InMotionMode() {
 
 ICSpark::MPState ICSpark::CalcNextMotionTarget(MPState current, units::turn_t goalPosition,
                                                units::second_t lookahead) {
-  units::turn_t error = units::math::abs(goalPosition - GetPosition());
+  units::turn_t error = units::math::abs(goalPosition - current.position);
   units::turn_t tolerance =
       _configCache.closedLoop.slots[0].maxMotion.allowedClosedLoopError.value_or(0_tr);
   if (error < tolerance) {
-    return MPState{GetPosition(), 0_rpm};
+    return MPState{current.position, 0_rpm};
   }
 
-  return _motionProfile.Calculate(
-      lookahead, current,
-      {goalPosition, units::revolutions_per_minute_t{0}});
+  return _motionProfile.Calculate(lookahead, current, {goalPosition, 0_rpm});
 }
