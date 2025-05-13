@@ -13,8 +13,11 @@ class Arm : public frc2::SubsystemBase {
   Arm();
   void Periodic() override;
   void SimulationPeriodic() override;
+
+  // Getters
   units::turn_t GetPosition();
   units::turns_per_second_t GetVelocity();
+  double GetMotorDutyCycle();
 
   // Commands
   frc2::CommandPtr MaxMotionTo(units::turn_t angle);

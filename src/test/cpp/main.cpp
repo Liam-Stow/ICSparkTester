@@ -28,11 +28,11 @@ void SimCmdScheduler(units::second_t duration = 20_ms) {
   }
 }
 
-void ExpectNearAngle(units::turn_t expected, units::turn_t actual, units::turn_t tolerance = 2_deg) {
+void ExpectNearAngle(units::turn_t expected, units::turn_t actual, units::turn_t tolerance = 0.005_tr) {
   EXPECT_NEAR(expected.value(), actual.value(), tolerance.value());
 }
 void ExpectNearAngleVel(units::turns_per_second_t expected, units::turns_per_second_t actual,
-                 units::turns_per_second_t tolerance = 10_rpm) {
+                 units::turns_per_second_t tolerance = 0.1_tps) {
   EXPECT_NEAR(expected.value(), actual.value(), tolerance.value());
 }
 void ExpectNearLinear(units::meter_t expected, units::meter_t actual, units::meter_t tolerance = 0.01_m) {
@@ -47,47 +47,31 @@ void ExpectNearLinearVelocity(units::meters_per_second_t expected, units::meters
 // ARM TESTS
 class ArmTest : public testing::Test {
  protected:
-  // Arm arm;
+  Arm arm;
 };
 
-// TEST_F(ArmTest, maxMotion) {
-//   auto target = 90_deg;
-//   auto cmd = arm.MaxMotionTo(target);
-//   cmd.Schedule();
-//   SimCmdScheduler(2_s);
-//   expect_near(arm.GetPosition(), target);
-// }
+TEST_F(ArmTest, wpiProfile) {
+  auto target = 90_deg;
+  auto cmd = arm.WPIProfileTo(target);
+  cmd.Schedule();
+  SimCmdScheduler(5_s);
+  ExpectNearAngle(arm.GetPosition(), target);
+}
 
-// TEST_F(ArmTest, wpiProfile) {
-//   Arm arm;
-//   auto target = 90_deg;
-//   auto cmd = arm.WPIProfileTo(target);
-//   cmd.Schedule();
-//   SimCmdScheduler(5_s);
-//   expect_near(arm.GetPosition(), target);
-// }
-
-// TEST_F(ArmTest, pid) {
-//   auto target = 90_deg;
-//   auto cmd = arm.PIDTo(target);
-//   cmd.Schedule();
-//   SimCmdScheduler(2_s);
-//   expect_near(arm.GetPosition(), target);
-// }
+TEST_F(ArmTest, pid) {
+  auto target = 90_deg;
+  auto cmd = arm.PIDTo(target);
+  cmd.Schedule();
+  SimCmdScheduler(2_s);
+  ExpectNearAngle(arm.GetPosition(), target);
+}
 
 
+// ELEVATOR TESTS
 class ElevatorTest : public testing::Test {
  protected:
   Elevator elevator;
 };
-
-TEST_F(ElevatorTest, maxMotion) {
-  auto target = 0.5_m;
-  auto cmd = elevator.MaxMotionTo(target);
-  cmd.Schedule();
-  SimCmdScheduler(2_s);
-  ExpectNearLinear(target, elevator.GetHeight());
-}
 
 TEST_F(ElevatorTest, wpiProfile) {
   auto target = 0.5_m;
@@ -111,4 +95,48 @@ TEST_F(ElevatorTest, driveWithDutyCycle) {
   cmd.Schedule();
   SimCmdScheduler(0.5_s); // give it some time to accelerate so the current limit isn't affecting dutycycle
   EXPECT_NEAR(target, elevator.GetMotorDutyCycle(), 0.0001);
+}
+
+
+// FLYWHEEL TESTS
+class FlywheelTest : public testing::Test {
+ protected:
+  Flywheel flywheel;
+};
+
+TEST_F(FlywheelTest, spinAt) {
+  auto target = 3000_rpm;
+  auto cmd = flywheel.SpinAt(target);
+  cmd.Schedule();
+  SimCmdScheduler(10_s);
+  ExpectNearAngleVel(target, flywheel.GetVelocity());
+}
+
+TEST_F(FlywheelTest, spinAtDutyCycle) {
+  auto target = 0.5;
+  auto cmd = flywheel.SpinAt(target);
+  cmd.Schedule();
+  SimCmdScheduler(0.5_s); // give it some time to accelerate so the current limit isn't affecting dutycycle
+  EXPECT_NEAR(target, flywheel.GetMotorDutyCycle(), 0.0001);
+}
+
+
+// FEEDER TESTS
+class FeederTest : public testing::Test {
+ protected:
+  Feeder feeder;
+};
+
+TEST_F(FeederTest, feedIn) {
+  auto cmd = feeder.FeedIn();
+  cmd.Schedule();
+  SimCmdScheduler(0.5_s); // give it some time to accelerate so the current limit isn't affecting dutycycle
+  EXPECT_GT(feeder.GetMotorDutyCycle(), 0);
+}
+
+TEST_F(FeederTest, feedOut) {
+  auto cmd = feeder.FeedOut();
+  cmd.Schedule();
+  SimCmdScheduler(0.5_s); // give it some time to accelerate so the current limit isn't affecting dutycycle
+  EXPECT_LT(feeder.GetMotorDutyCycle(), 0);
 }

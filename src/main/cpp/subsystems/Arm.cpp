@@ -8,7 +8,7 @@ Arm::Arm() {
   ICSparkConfig config;
   config.encoder.positionConversionFactor = 1.0 / GEARING;
   config.encoder.velocityConversionFactor = 1.0 / GEARING;
-  config.closedLoop.slots[0].p = 0.4;
+  config.closedLoop.slots[0].p = 1;
   config.closedLoop.slots[0].maxMotion.maxVelocity = 300_rpm;
   config.closedLoop.slots[0].maxMotion.maxAcceleration = 100_rev_per_m_per_s;
   config.smartCurrentStallLimit = 100_A;
@@ -53,6 +53,14 @@ frc2::CommandPtr Arm::DriveWithDutyCycle(double dutyCycle) {
                   [this] { _motor.StopMotor(); });
 }
 
-units::turn_t Arm::GetPosition() { return _motor.GetPosition(); }
+units::turn_t Arm::GetPosition() {
+  return _motor.GetPosition();
+}
 
-units::turns_per_second_t Arm::GetVelocity() { return _motor.GetVelocity(); }
+units::turns_per_second_t Arm::GetVelocity() {
+  return _motor.GetVelocity();
+}
+
+double Arm::GetMotorDutyCycle() {
+  return _motor.GetDutyCycle();
+}

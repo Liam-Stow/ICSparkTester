@@ -26,3 +26,7 @@ frc2::CommandPtr Feeder::FeedOut() {
     return StartEnd([this] { _motor.SetDutyCycle(-0.5); },
                     [this] { _motor.StopMotor(); });
 }
+
+double Feeder::GetMotorDutyCycle() {
+  return _motor.Get();
+}

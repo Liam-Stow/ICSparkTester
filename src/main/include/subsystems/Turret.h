@@ -22,6 +22,10 @@ class Turret : public frc2::SubsystemBase {
   frc2::CommandPtr PIDTo(units::turn_t angle);
   frc2::CommandPtr DriveWithDutyCycle(double dutyCycle);
 
+  // Getters
+  units::turn_t GetPosition();
+  double GetMotorDutyCycle();
+
  private:
   // Electronics
   ICSparkFlex _motor{canid::TURRET_MOTOR};

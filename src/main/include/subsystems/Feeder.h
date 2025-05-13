@@ -17,6 +17,9 @@ class Feeder : public frc2::SubsystemBase {
   frc2::CommandPtr FeedIn();
   frc2::CommandPtr FeedOut();
 
+  // Getters
+  double GetMotorDutyCycle();
+
  private:
   // Electronics
   ICSparkFlex _motor{canid::FEEDER_MOTOR};

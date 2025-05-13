@@ -48,3 +48,11 @@ frc2::CommandPtr Turret::DriveWithDutyCycle(double dutyCycle) {
   return StartEnd([this, dutyCycle] { _motor.SetDutyCycle(dutyCycle); },
                   [this] { _motor.StopMotor(); });
 }
+
+units::turn_t Turret::GetPosition() {
+  return _motor.GetPosition();
+}
+
+double Turret::GetMotorDutyCycle() {
+  return _motor.GetDutyCycle();
+}

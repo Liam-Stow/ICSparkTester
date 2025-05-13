@@ -15,18 +15,22 @@ class Elevator : public frc2::SubsystemBase {
 
   void Periodic() override;
   void SimulationPeriodic() override;
-  units::meter_t TurnsToHeight(units::turn_t turns);
-  units::turn_t HeightToTurns(units::meter_t height);
-  units::meters_per_second_t RPMToMPS(units::revolutions_per_minute_t rpm);
-  units::revolutions_per_minute_t MPSToRPM(units::meters_per_second_t mps);
-  units::meter_t GetHeight();
-  double GetMotorDutyCycle();
 
   // Commands
   frc2::CommandPtr MaxMotionTo(units::meter_t height);
   frc2::CommandPtr WPIProfileTo(units::meter_t height);
   frc2::CommandPtr PIDTo(units::meter_t height);
   frc2::CommandPtr DriveWithDutyCycle(double dutyCycle);
+
+  // Linear <-> Rotation Conversions
+  units::meter_t TurnsToHeight(units::turn_t turns);
+  units::turn_t HeightToTurns(units::meter_t height);
+  units::meters_per_second_t RPMToMPS(units::revolutions_per_minute_t rpm);
+  units::revolutions_per_minute_t MPSToRPM(units::meters_per_second_t mps);
+
+  // Getters
+  units::meter_t GetHeight();
+  double GetMotorDutyCycle();
 
  private:
   // Electronics

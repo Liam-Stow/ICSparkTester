@@ -19,6 +19,11 @@ class Flywheel : public frc2::SubsystemBase {
   
   // Commands
   frc2::CommandPtr SpinAt(units::turns_per_second_t velocity);
+  frc2::CommandPtr SpinAt(double dutyCycle);
+
+  // Getters
+  units::turns_per_second_t GetVelocity();
+  double GetMotorDutyCycle();
 
  private:
   // Electronics
