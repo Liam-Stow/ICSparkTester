@@ -3,9 +3,9 @@
 
 template <typename T>
 void MergeOptional(std::optional<T>& target, const std::optional<T>& source) {
-    if (source) {
-        target = source;
-    }
+  if (source) {
+    target = source;
+  }
 }
 
 void ICSparkConfig::FillREVConfig(rev::spark::SparkBaseConfig& config) const {
@@ -79,8 +79,6 @@ void ICSparkConfig::FillREVConfig(rev::spark::SparkBaseConfig& config) const {
       config.closedLoop.I(*slot.i, slot.slotID);
     if (slot.d)
       config.closedLoop.D(*slot.d, slot.slotID);
-    if (slot.velocityFF)
-      config.closedLoop.VelocityFF(*slot.velocityFF, slot.slotID);
     if (slot.dFilter)
       config.closedLoop.DFilter(*slot.dFilter, slot.slotID);
     if (slot.iZone)
@@ -91,13 +89,25 @@ void ICSparkConfig::FillREVConfig(rev::spark::SparkBaseConfig& config) const {
       config.closedLoop.MaxOutput(*slot.maxOutput, slot.slotID);
     if (slot.iMaxAccum)
       config.closedLoop.IMaxAccum(*slot.iMaxAccum, slot.slotID);
+    if (slot.feedforward.velocityFF)
+      config.closedLoop.feedForward.kV(*slot.feedforward.velocityFF, slot.slotID);
+    if (slot.feedforward.accelerationFF)
+      config.closedLoop.feedForward.kA(*slot.feedforward.accelerationFF, slot.slotID);
+    if (slot.feedforward.staticFF)
+      config.closedLoop.feedForward.kS(*slot.feedforward.staticFF, slot.slotID);
+    if (slot.feedforward.linearGravityFF)
+      config.closedLoop.feedForward.kG(*slot.feedforward.linearGravityFF, slot.slotID);
+    if (slot.feedforward.rotationalGravityFF)
+      config.closedLoop.feedForward.kCos(*slot.feedforward.rotationalGravityFF, slot.slotID);
+    if (slot.feedforward.cosineRatio)
+      config.closedLoop.feedForward.kCosRatio(*slot.feedforward.cosineRatio, slot.slotID);
     if (slot.maxMotion.maxVelocity)
-      config.closedLoop.maxMotion.MaxVelocity(slot.maxMotion.maxVelocity->value(), slot.slotID);
+      config.closedLoop.maxMotion.CruiseVelocity(slot.maxMotion.maxVelocity->value(), slot.slotID);
     if (slot.maxMotion.maxAcceleration)
       config.closedLoop.maxMotion.MaxAcceleration(slot.maxMotion.maxAcceleration->value(),
                                                   slot.slotID);
     if (slot.maxMotion.allowedClosedLoopError)
-      config.closedLoop.maxMotion.AllowedClosedLoopError(
+      config.closedLoop.maxMotion.AllowedProfileError(
           slot.maxMotion.allowedClosedLoopError->value(), slot.slotID);
     if (slot.maxMotion.positionMode)
       config.closedLoop.maxMotion.PositionMode(*slot.maxMotion.positionMode, slot.slotID);
@@ -120,14 +130,20 @@ void ICSparkConfig::FillREVConfig(rev::spark::SparkBaseConfig& config) const {
     config.encoder.UvwMeasurementPeriod(encoder.uvwMeasurementPeriod->value());
 
   // Limit switch
-  if (limitSwitch.forwardLimitSwitchEnabled)
-    config.limitSwitch.ForwardLimitSwitchEnabled(*limitSwitch.forwardLimitSwitchEnabled);
+  if (limitSwitch.forwardLimitSwitchPosition)
+    config.limitSwitch.ForwardLimitSwitchPosition(*limitSwitch.forwardLimitSwitchPosition);
+  if (limitSwitch.forwardLimitSwitchTriggerBehavior)
+    config.limitSwitch.ForwardLimitSwitchTriggerBehavior(*limitSwitch.forwardLimitSwitchTriggerBehavior);
   if (limitSwitch.forwardLimitSwitchType)
     config.limitSwitch.ForwardLimitSwitchType(*limitSwitch.forwardLimitSwitchType);
-  if (limitSwitch.reverseLimitSwitchEnabled)
-    config.limitSwitch.ReverseLimitSwitchEnabled(*limitSwitch.reverseLimitSwitchEnabled);
+  if (limitSwitch.reverseLimitSwitchPosition)
+    config.limitSwitch.ReverseLimitSwitchPosition(*limitSwitch.reverseLimitSwitchPosition);
+  if (limitSwitch.reverseLimitSwitchTriggerBehavior)
+    config.limitSwitch.ReverseLimitSwitchTriggerBehavior(*limitSwitch.reverseLimitSwitchTriggerBehavior);
   if (limitSwitch.reverseLimitSwitchType)
     config.limitSwitch.ReverseLimitSwitchType(*limitSwitch.reverseLimitSwitchType);
+  if (limitSwitch.positionSensor)
+    config.limitSwitch.LimitSwitchPositionSensor(*limitSwitch.positionSensor);
 
   // Signals
   if (signals.appliedOutputPeriodMs)
@@ -205,119 +221,143 @@ void ICSparkConfig::FillREVConfig(rev::spark::SparkBaseConfig& config) const {
 }
 
 void ICSparkConfig::Adjust(const ICSparkConfig& other) {
-    // Top level configs
-    MergeOptional(inverted, other.inverted);
-    MergeOptional(idleMode, other.idleMode);
-    MergeOptional(smartCurrentStallLimit, other.smartCurrentStallLimit);
-    MergeOptional(smartCurrentfreeLimit, other.smartCurrentfreeLimit);
-    MergeOptional(smartCurrentVelocityLimit, other.smartCurrentVelocityLimit);
-    MergeOptional(secondaryCurrentLimit, other.secondaryCurrentLimit);
-    MergeOptional(secondaryCurrentLimitChopCycles, other.secondaryCurrentLimitChopCycles);
-    MergeOptional(openLoopRampRate, other.openLoopRampRate);
-    MergeOptional(closedLoopRampRate, other.closedLoopRampRate);
-    MergeOptional(voltageCompensationNominalVoltage, other.voltageCompensationNominalVoltage);
-    MergeOptional(followCanId, other.followCanId);
-    MergeOptional(followInverted, other.followInverted);
+  // Top level configs
+  MergeOptional(inverted, other.inverted);
+  MergeOptional(idleMode, other.idleMode);
+  MergeOptional(smartCurrentStallLimit, other.smartCurrentStallLimit);
+  MergeOptional(smartCurrentfreeLimit, other.smartCurrentfreeLimit);
+  MergeOptional(smartCurrentVelocityLimit, other.smartCurrentVelocityLimit);
+  MergeOptional(secondaryCurrentLimit, other.secondaryCurrentLimit);
+  MergeOptional(secondaryCurrentLimitChopCycles, other.secondaryCurrentLimitChopCycles);
+  MergeOptional(openLoopRampRate, other.openLoopRampRate);
+  MergeOptional(closedLoopRampRate, other.closedLoopRampRate);
+  MergeOptional(voltageCompensationNominalVoltage, other.voltageCompensationNominalVoltage);
+  MergeOptional(followCanId, other.followCanId);
+  MergeOptional(followInverted, other.followInverted);
 
-    // Feedforward
-    MergeOptional(feedforward.staticFriction, other.feedforward.staticFriction);
-    MergeOptional(feedforward.linearGravity, other.feedforward.linearGravity);
-    MergeOptional(feedforward.rotationalGravity, other.feedforward.rotationalGravity);
-    MergeOptional(feedforward.velocity, other.feedforward.velocity);
-    MergeOptional(feedforward.acceleration, other.feedforward.acceleration);
+  // Feedforward
+  MergeOptional(feedforward.staticFriction, other.feedforward.staticFriction);
+  MergeOptional(feedforward.linearGravity, other.feedforward.linearGravity);
+  MergeOptional(feedforward.rotationalGravity, other.feedforward.rotationalGravity);
+  MergeOptional(feedforward.velocity, other.feedforward.velocity);
+  MergeOptional(feedforward.acceleration, other.feedforward.acceleration);
 
-    // Absolute Encoder
-    MergeOptional(absoluteEncoder.inverted, other.absoluteEncoder.inverted);
-    MergeOptional(absoluteEncoder.positionConversionFactor, other.absoluteEncoder.positionConversionFactor);
-    MergeOptional(absoluteEncoder.velocityConversionFactor, other.absoluteEncoder.velocityConversionFactor);
-    MergeOptional(absoluteEncoder.zeroOffset, other.absoluteEncoder.zeroOffset);
-    MergeOptional(absoluteEncoder.averageDepth, other.absoluteEncoder.averageDepth);
-    MergeOptional(absoluteEncoder.startPulseUs, other.absoluteEncoder.startPulseUs);
-    MergeOptional(absoluteEncoder.endPulseUs, other.absoluteEncoder.endPulseUs);
-    MergeOptional(absoluteEncoder.zeroCentered, other.absoluteEncoder.zeroCentered);
+  // Absolute Encoder
+  MergeOptional(absoluteEncoder.inverted, other.absoluteEncoder.inverted);
+  MergeOptional(absoluteEncoder.positionConversionFactor,
+                other.absoluteEncoder.positionConversionFactor);
+  MergeOptional(absoluteEncoder.velocityConversionFactor,
+                other.absoluteEncoder.velocityConversionFactor);
+  MergeOptional(absoluteEncoder.zeroOffset, other.absoluteEncoder.zeroOffset);
+  MergeOptional(absoluteEncoder.averageDepth, other.absoluteEncoder.averageDepth);
+  MergeOptional(absoluteEncoder.startPulseUs, other.absoluteEncoder.startPulseUs);
+  MergeOptional(absoluteEncoder.endPulseUs, other.absoluteEncoder.endPulseUs);
+  MergeOptional(absoluteEncoder.zeroCentered, other.absoluteEncoder.zeroCentered);
 
-    // Analog sensor
-    MergeOptional(analogSensor.inverted, other.analogSensor.inverted);
-    MergeOptional(analogSensor.positionConversionFactor, other.analogSensor.positionConversionFactor);
-    MergeOptional(analogSensor.velocityConversionFactor, other.analogSensor.velocityConversionFactor);
+  // Analog sensor
+  MergeOptional(analogSensor.inverted, other.analogSensor.inverted);
+  MergeOptional(analogSensor.positionConversionFactor, other.analogSensor.positionConversionFactor);
+  MergeOptional(analogSensor.velocityConversionFactor, other.analogSensor.velocityConversionFactor);
 
-    // Closed loop global settings
-    MergeOptional(closedLoop.positionWrappingEnabled, other.closedLoop.positionWrappingEnabled);
-    MergeOptional(closedLoop.positionWrappingMinInput, other.closedLoop.positionWrappingMinInput);
-    MergeOptional(closedLoop.positionWrappingMaxInput, other.closedLoop.positionWrappingMaxInput);
-    MergeOptional(closedLoop.feedbackSensor, other.closedLoop.feedbackSensor);
+  // Closed loop global settings
+  MergeOptional(closedLoop.positionWrappingEnabled, other.closedLoop.positionWrappingEnabled);
+  MergeOptional(closedLoop.positionWrappingMinInput, other.closedLoop.positionWrappingMinInput);
+  MergeOptional(closedLoop.positionWrappingMaxInput, other.closedLoop.positionWrappingMaxInput);
+  MergeOptional(closedLoop.feedbackSensor, other.closedLoop.feedbackSensor);
 
-    // Helper lambda to merge a closed-loop slot
-    auto MergeSlot = [](auto &targetSlot, const auto &sourceSlot) {
-        MergeOptional(targetSlot.p, sourceSlot.p);
-        MergeOptional(targetSlot.i, sourceSlot.i);
-        MergeOptional(targetSlot.d, sourceSlot.d);
-        MergeOptional(targetSlot.velocityFF, sourceSlot.velocityFF);
-        MergeOptional(targetSlot.dFilter, sourceSlot.dFilter);
-        MergeOptional(targetSlot.iZone, sourceSlot.iZone);
-        MergeOptional(targetSlot.minOutput, sourceSlot.minOutput);
-        MergeOptional(targetSlot.maxOutput, sourceSlot.maxOutput);
-        MergeOptional(targetSlot.iMaxAccum, sourceSlot.iMaxAccum);
-        MergeOptional(targetSlot.maxMotion.maxVelocity, sourceSlot.maxMotion.maxVelocity);
-        MergeOptional(targetSlot.maxMotion.maxAcceleration, sourceSlot.maxMotion.maxAcceleration);
-        MergeOptional(targetSlot.maxMotion.allowedClosedLoopError, sourceSlot.maxMotion.allowedClosedLoopError);
-        MergeOptional(targetSlot.maxMotion.positionMode, sourceSlot.maxMotion.positionMode);
-    };
+  // Helper lambda to merge a closed-loop slot
+  auto MergeSlot = [](ClosedLoopSlotConfig& targetSlot, const ClosedLoopSlotConfig& sourceSlot) {
+    MergeOptional(targetSlot.p, sourceSlot.p);
+    MergeOptional(targetSlot.i, sourceSlot.i);
+    MergeOptional(targetSlot.d, sourceSlot.d);
+    MergeOptional(targetSlot.dFilter, sourceSlot.dFilter);
+    MergeOptional(targetSlot.iZone, sourceSlot.iZone);
+    MergeOptional(targetSlot.minOutput, sourceSlot.minOutput);
+    MergeOptional(targetSlot.maxOutput, sourceSlot.maxOutput);
+    MergeOptional(targetSlot.iMaxAccum, sourceSlot.iMaxAccum);
+    MergeOptional(targetSlot.feedforward.velocityFF, sourceSlot.feedforward.velocityFF);
+    MergeOptional(targetSlot.feedforward.accelerationFF, sourceSlot.feedforward.accelerationFF);
+    MergeOptional(targetSlot.feedforward.staticFF, sourceSlot.feedforward.staticFF);
+    MergeOptional(targetSlot.feedforward.linearGravityFF, sourceSlot.feedforward.linearGravityFF);
+    MergeOptional(targetSlot.feedforward.rotationalGravityFF,
+                  sourceSlot.feedforward.rotationalGravityFF);
+    MergeOptional(targetSlot.feedforward.cosineRatio, sourceSlot.feedforward.cosineRatio);
+    MergeOptional(targetSlot.maxMotion.maxVelocity, sourceSlot.maxMotion.maxVelocity);
+    MergeOptional(targetSlot.maxMotion.maxAcceleration, sourceSlot.maxMotion.maxAcceleration);
+    MergeOptional(targetSlot.maxMotion.allowedClosedLoopError,
+                  sourceSlot.maxMotion.allowedClosedLoopError);
+    MergeOptional(targetSlot.maxMotion.positionMode, sourceSlot.maxMotion.positionMode);
+  };
 
-    MergeSlot(closedLoop.slots[0], other.closedLoop.slots[0]);
-    MergeSlot(closedLoop.slots[1], other.closedLoop.slots[1]);
-    MergeSlot(closedLoop.slots[2], other.closedLoop.slots[2]);
-    MergeSlot(closedLoop.slots[3], other.closedLoop.slots[3]);
+  MergeSlot(closedLoop.slots[0], other.closedLoop.slots[0]);
+  MergeSlot(closedLoop.slots[1], other.closedLoop.slots[1]);
+  MergeSlot(closedLoop.slots[2], other.closedLoop.slots[2]);
+  MergeSlot(closedLoop.slots[3], other.closedLoop.slots[3]);
 
-    // Encoder
-    MergeOptional(encoder.inverted, other.encoder.inverted);
-    MergeOptional(encoder.positionConversionFactor, other.encoder.positionConversionFactor);
-    MergeOptional(encoder.velocityConversionFactor, other.encoder.velocityConversionFactor);
-    MergeOptional(encoder.quadratureAverageDepth, other.encoder.quadratureAverageDepth);
-    MergeOptional(encoder.quadratureMeasurementPeriod, other.encoder.quadratureMeasurementPeriod);
-    MergeOptional(encoder.uvwAverageDepth, other.encoder.uvwAverageDepth);
-    MergeOptional(encoder.uvwMeasurementPeriod, other.encoder.uvwMeasurementPeriod);
+  // Encoder
+  MergeOptional(encoder.inverted, other.encoder.inverted);
+  MergeOptional(encoder.positionConversionFactor, other.encoder.positionConversionFactor);
+  MergeOptional(encoder.velocityConversionFactor, other.encoder.velocityConversionFactor);
+  MergeOptional(encoder.quadratureAverageDepth, other.encoder.quadratureAverageDepth);
+  MergeOptional(encoder.quadratureMeasurementPeriod, other.encoder.quadratureMeasurementPeriod);
+  MergeOptional(encoder.uvwAverageDepth, other.encoder.uvwAverageDepth);
+  MergeOptional(encoder.uvwMeasurementPeriod, other.encoder.uvwMeasurementPeriod);
 
-    // Limit switch
-    MergeOptional(limitSwitch.forwardLimitSwitchEnabled, other.limitSwitch.forwardLimitSwitchEnabled);
-    MergeOptional(limitSwitch.forwardLimitSwitchType, other.limitSwitch.forwardLimitSwitchType);
-    MergeOptional(limitSwitch.reverseLimitSwitchEnabled, other.limitSwitch.reverseLimitSwitchEnabled);
-    MergeOptional(limitSwitch.reverseLimitSwitchType, other.limitSwitch.reverseLimitSwitchType);
+  // Limit switch
+  MergeOptional(limitSwitch.forwardLimitSwitchPosition, other.limitSwitch.forwardLimitSwitchPosition);
+  MergeOptional(limitSwitch.forwardLimitSwitchTriggerBehavior,
+                other.limitSwitch.forwardLimitSwitchTriggerBehavior);
+  MergeOptional(limitSwitch.forwardLimitSwitchType, other.limitSwitch.forwardLimitSwitchType);
+  MergeOptional(limitSwitch.reverseLimitSwitchPosition, other.limitSwitch.reverseLimitSwitchPosition);
+  MergeOptional(limitSwitch.reverseLimitSwitchTriggerBehavior,
+                other.limitSwitch.reverseLimitSwitchTriggerBehavior);
+  MergeOptional(limitSwitch.reverseLimitSwitchType, other.limitSwitch.reverseLimitSwitchType);
+  MergeOptional(limitSwitch.positionSensor, other.limitSwitch.positionSensor);
 
-    // Signals
-    MergeOptional(signals.appliedOutputPeriodMs, other.signals.appliedOutputPeriodMs);
-    MergeOptional(signals.busVoltagePeriodMs, other.signals.busVoltagePeriodMs);
-    MergeOptional(signals.outputCurrentPeriodMs, other.signals.outputCurrentPeriodMs);
-    MergeOptional(signals.motorTemperaturePeriodMs, other.signals.motorTemperaturePeriodMs);
-    MergeOptional(signals.limitsPeriodMs, other.signals.limitsPeriodMs);
-    MergeOptional(signals.faultsPeriodMs, other.signals.faultsPeriodMs);
-    MergeOptional(signals.faultsAlwaysOn, other.signals.faultsAlwaysOn);
-    MergeOptional(signals.warningsPeriodMs, other.signals.warningsPeriodMs);
-    MergeOptional(signals.warningsAlwaysOn, other.signals.warningsAlwaysOn);
-    MergeOptional(signals.primaryEncoderVelocityPeriodMs, other.signals.primaryEncoderVelocityPeriodMs);
-    MergeOptional(signals.primaryEncoderVelocityAlwaysOn, other.signals.primaryEncoderVelocityAlwaysOn);
-    MergeOptional(signals.primaryEncoderPositionPeriodMs, other.signals.primaryEncoderPositionPeriodMs);
-    MergeOptional(signals.primaryEncoderPositionAlwaysOn, other.signals.primaryEncoderPositionAlwaysOn);
-    MergeOptional(signals.analogVoltagePeriodMs, other.signals.analogVoltagePeriodMs);
-    MergeOptional(signals.analogVoltageAlwaysOn, other.signals.analogVoltageAlwaysOn);
-    MergeOptional(signals.analogVelocityPeriodMs, other.signals.analogVelocityPeriodMs);
-    MergeOptional(signals.analogVelocityAlwaysOn, other.signals.analogVelocityAlwaysOn);
-    MergeOptional(signals.analogPositionPeriodMs, other.signals.analogPositionPeriodMs);
-    MergeOptional(signals.analogPositionAlwaysOn, other.signals.analogPositionAlwaysOn);
-    MergeOptional(signals.externalOrAltEncoderVelocity, other.signals.externalOrAltEncoderVelocity);
-    MergeOptional(signals.externalOrAltEncoderVelocityAlwaysOn, other.signals.externalOrAltEncoderVelocityAlwaysOn);
-    MergeOptional(signals.externalOrAltEncoderPosition, other.signals.externalOrAltEncoderPosition);
-    MergeOptional(signals.externalOrAltEncoderPositionAlwaysOn, other.signals.externalOrAltEncoderPositionAlwaysOn);
-    MergeOptional(signals.absoluteEncoderVelocityPeriodMs, other.signals.absoluteEncoderVelocityPeriodMs);
-    MergeOptional(signals.absoluteEncoderVelocityAlwaysOn, other.signals.absoluteEncoderVelocityAlwaysOn);
-    MergeOptional(signals.absoluteEncoderPositionPeriodMs, other.signals.absoluteEncoderPositionPeriodMs);
-    MergeOptional(signals.absoluteEncoderPositionAlwaysOn, other.signals.absoluteEncoderPositionAlwaysOn);
-    MergeOptional(signals.iAccumulationPeriodMs, other.signals.iAccumulationPeriodMs);
-    MergeOptional(signals.iAccumulationAlwaysOn, other.signals.iAccumulationAlwaysOn);
+  // Signals
+  MergeOptional(signals.appliedOutputPeriodMs, other.signals.appliedOutputPeriodMs);
+  MergeOptional(signals.busVoltagePeriodMs, other.signals.busVoltagePeriodMs);
+  MergeOptional(signals.outputCurrentPeriodMs, other.signals.outputCurrentPeriodMs);
+  MergeOptional(signals.motorTemperaturePeriodMs, other.signals.motorTemperaturePeriodMs);
+  MergeOptional(signals.limitsPeriodMs, other.signals.limitsPeriodMs);
+  MergeOptional(signals.faultsPeriodMs, other.signals.faultsPeriodMs);
+  MergeOptional(signals.faultsAlwaysOn, other.signals.faultsAlwaysOn);
+  MergeOptional(signals.warningsPeriodMs, other.signals.warningsPeriodMs);
+  MergeOptional(signals.warningsAlwaysOn, other.signals.warningsAlwaysOn);
+  MergeOptional(signals.primaryEncoderVelocityPeriodMs,
+                other.signals.primaryEncoderVelocityPeriodMs);
+  MergeOptional(signals.primaryEncoderVelocityAlwaysOn,
+                other.signals.primaryEncoderVelocityAlwaysOn);
+  MergeOptional(signals.primaryEncoderPositionPeriodMs,
+                other.signals.primaryEncoderPositionPeriodMs);
+  MergeOptional(signals.primaryEncoderPositionAlwaysOn,
+                other.signals.primaryEncoderPositionAlwaysOn);
+  MergeOptional(signals.analogVoltagePeriodMs, other.signals.analogVoltagePeriodMs);
+  MergeOptional(signals.analogVoltageAlwaysOn, other.signals.analogVoltageAlwaysOn);
+  MergeOptional(signals.analogVelocityPeriodMs, other.signals.analogVelocityPeriodMs);
+  MergeOptional(signals.analogVelocityAlwaysOn, other.signals.analogVelocityAlwaysOn);
+  MergeOptional(signals.analogPositionPeriodMs, other.signals.analogPositionPeriodMs);
+  MergeOptional(signals.analogPositionAlwaysOn, other.signals.analogPositionAlwaysOn);
+  MergeOptional(signals.externalOrAltEncoderVelocity, other.signals.externalOrAltEncoderVelocity);
+  MergeOptional(signals.externalOrAltEncoderVelocityAlwaysOn,
+                other.signals.externalOrAltEncoderVelocityAlwaysOn);
+  MergeOptional(signals.externalOrAltEncoderPosition, other.signals.externalOrAltEncoderPosition);
+  MergeOptional(signals.externalOrAltEncoderPositionAlwaysOn,
+                other.signals.externalOrAltEncoderPositionAlwaysOn);
+  MergeOptional(signals.absoluteEncoderVelocityPeriodMs,
+                other.signals.absoluteEncoderVelocityPeriodMs);
+  MergeOptional(signals.absoluteEncoderVelocityAlwaysOn,
+                other.signals.absoluteEncoderVelocityAlwaysOn);
+  MergeOptional(signals.absoluteEncoderPositionPeriodMs,
+                other.signals.absoluteEncoderPositionPeriodMs);
+  MergeOptional(signals.absoluteEncoderPositionAlwaysOn,
+                other.signals.absoluteEncoderPositionAlwaysOn);
+  MergeOptional(signals.iAccumulationPeriodMs, other.signals.iAccumulationPeriodMs);
+  MergeOptional(signals.iAccumulationAlwaysOn, other.signals.iAccumulationAlwaysOn);
 
-    // Soft limit
-    MergeOptional(softLimit.forwardSoftLimit, other.softLimit.forwardSoftLimit);
-    MergeOptional(softLimit.forwardSoftLimitEnabled, other.softLimit.forwardSoftLimitEnabled);
-    MergeOptional(softLimit.reverseSoftLimit, other.softLimit.reverseSoftLimit);
-    MergeOptional(softLimit.reverseSoftLimitEnabled, other.softLimit.reverseSoftLimitEnabled);
+  // Soft limit
+  MergeOptional(softLimit.forwardSoftLimit, other.softLimit.forwardSoftLimit);
+  MergeOptional(softLimit.forwardSoftLimitEnabled, other.softLimit.forwardSoftLimitEnabled);
+  MergeOptional(softLimit.reverseSoftLimit, other.softLimit.reverseSoftLimit);
+  MergeOptional(softLimit.reverseSoftLimitEnabled, other.softLimit.reverseSoftLimitEnabled);
 }

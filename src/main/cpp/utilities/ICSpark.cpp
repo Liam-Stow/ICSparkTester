@@ -8,12 +8,10 @@
 #include <units/voltage.h>
 #include <cstdlib>
 #include <iostream>
-#include <rev/ClosedLoopSlot.h>
+#include <rev/ClosedLoopTypes.h>
 
 ICSpark::ICSpark(rev::spark::SparkBase* spark, rev::spark::SparkRelativeEncoder& inbuiltEncoder)
-    : _spark(spark),
-      _encoder(inbuiltEncoder),
-      _simSpark(spark, &_vortexModel) {
+    : _spark(spark), _encoder(inbuiltEncoder), _simSpark(spark, &_vortexModel) {
   // Apply the IC default configuration.
   // Includes setting vel conversion factor to use revs per sec not revs per min and a safeish
   // current limit.
@@ -76,19 +74,19 @@ rev::REVLibError ICSpark::Configure(ICSparkConfig& config,
   return _spark->Configure(revConfig, resetMode, persistMode);
 }
 
-rev::REVLibError ICSpark::AdjustConfig(ICSparkConfig &config) {
+rev::REVLibError ICSpark::AdjustConfig(ICSparkConfig& config) {
   return Configure(config, rev::spark::SparkBase::ResetMode::kNoResetSafeParameters,
-                            rev::spark::SparkBase::PersistMode::kPersistParameters);
+                   rev::spark::SparkBase::PersistMode::kPersistParameters);
 };
 
-rev::REVLibError ICSpark::AdjustConfigNoPersist(ICSparkConfig &config) {
+rev::REVLibError ICSpark::AdjustConfigNoPersist(ICSparkConfig& config) {
   return Configure(config, rev::spark::SparkBase::ResetMode::kNoResetSafeParameters,
-                            rev::spark::SparkBase::PersistMode::kNoPersistParameters);
+                   rev::spark::SparkBase::PersistMode::kNoPersistParameters);
 };
 
-rev::REVLibError ICSpark::OverwriteConfig(ICSparkConfig &config) {
+rev::REVLibError ICSpark::OverwriteConfig(ICSparkConfig& config) {
   return Configure(config, rev::spark::SparkBase::ResetMode::kResetSafeParameters,
-                            rev::spark::SparkBase::PersistMode::kPersistParameters);
+                   rev::spark::SparkBase::PersistMode::kPersistParameters);
 };
 
 ICSparkConfig ICSpark::GetCachedConfig() const {
@@ -107,10 +105,9 @@ void ICSpark::SetPositionTarget(units::turn_t target, units::volt_t arbFeedForwa
   _latestModelFeedForward = CalculateFeedforward(target, 0_tps);
   _controlType = ControlType::kPosition;
 
-  _sparkPidController.SetReference(target.value(),
-                                   rev::spark::SparkLowLevel::ControlType::kPosition,
-                                   rev::spark::ClosedLoopSlot::kSlot0,
-                                   _arbFeedForward.value() + _latestModelFeedForward.value());
+  _sparkPidController.SetSetpoint(target.value(), rev::spark::SparkLowLevel::ControlType::kPosition,
+                                  rev::spark::ClosedLoopSlot::kSlot0,
+                                  _arbFeedForward.value() + _latestModelFeedForward.value());
 }
 
 void ICSpark::SetMaxMotionTarget(units::turn_t target, units::volt_t arbFeedForward) {
@@ -135,7 +132,8 @@ void ICSpark::SetMotionProfileTarget(units::turn_t target, units::volt_t arbFeed
   UpdateControls();
 }
 
-void ICSpark::SetVelocityTarget(units::revolutions_per_minute_t target, units::volt_t arbFeedForward) {
+void ICSpark::SetVelocityTarget(units::revolutions_per_minute_t target,
+                                units::volt_t arbFeedForward) {
   _velocityTarget = target;
   _positionTarget = units::turn_t{0};
   _voltageTarget = 0_V;
@@ -143,10 +141,9 @@ void ICSpark::SetVelocityTarget(units::revolutions_per_minute_t target, units::v
   _latestModelFeedForward = CalculateFeedforward(0_tr, _velocityTarget);
   _controlType = ControlType::kVelocity;
 
-  _sparkPidController.SetReference(target.value(),
-                                   rev::spark::SparkLowLevel::ControlType::kVelocity,
-                                   rev::spark::ClosedLoopSlot::kSlot0,
-                                   _arbFeedForward.value() + _latestModelFeedForward.value());
+  _sparkPidController.SetSetpoint(target.value(), rev::spark::SparkLowLevel::ControlType::kVelocity,
+                                  rev::spark::ClosedLoopSlot::kSlot0,
+                                  _arbFeedForward.value() + _latestModelFeedForward.value());
 }
 
 void ICSpark::SetDutyCycle(double speed) {
@@ -157,7 +154,7 @@ void ICSpark::SetDutyCycle(double speed) {
   _latestModelFeedForward = 0_V;
   _controlType = ControlType::kDutyCycle;
 
-  _sparkPidController.SetReference(speed, rev::spark::SparkLowLevel::ControlType::kDutyCycle);
+  _sparkPidController.SetSetpoint(speed, rev::spark::SparkLowLevel::ControlType::kDutyCycle);
 }
 
 void ICSpark::SetVoltage(units::volt_t output) {
@@ -167,7 +164,7 @@ void ICSpark::SetVoltage(units::volt_t output) {
   _arbFeedForward = 0_V;
   _controlType = ControlType::kVoltage;
 
-  _sparkPidController.SetReference(output.value(), rev::spark::SparkLowLevel::ControlType::kVoltage);
+  _sparkPidController.SetSetpoint(output.value(), rev::spark::SparkLowLevel::ControlType::kVoltage);
 }
 
 void ICSpark::UpdateControls(units::second_t loopTime) {
@@ -208,7 +205,8 @@ void ICSpark::UpdateControls(units::second_t loopTime) {
   _latestModelFeedForward =
       CalculateFeedforward(_latestMotionTarget.position, _latestMotionTarget.velocity, accelTarget);
   units::volt_t feedforward = _arbFeedForward + _latestModelFeedForward;
-  _sparkPidController.SetReference(sparkTarget, GetREVControlType(), rev::spark::ClosedLoopSlot::kSlot0, feedforward.value());
+  _sparkPidController.SetSetpoint(sparkTarget, GetREVControlType(),
+                                  rev::spark::ClosedLoopSlot::kSlot0, feedforward.value());
 }
 
 units::volt_t ICSpark::CalculateFeedforward(units::turn_t pos, units::revolutions_per_minute_t vel,
@@ -216,8 +214,8 @@ units::volt_t ICSpark::CalculateFeedforward(units::turn_t pos, units::revolution
   auto kS = _configCache.feedforward.staticFriction.value_or(0_V);
   auto kLG = _configCache.feedforward.linearGravity.value_or(0_V);
   auto kRG = _configCache.feedforward.rotationalGravity.value_or(0_V);
-  auto kV = _configCache.feedforward.velocity.value_or(0_V/1_rpm);
-  auto kA = _configCache.feedforward.acceleration.value_or(0_V/1_rev_per_m_per_s);
+  auto kV = _configCache.feedforward.velocity.value_or(0_V / 1_rpm);
+  auto kA = _configCache.feedforward.acceleration.value_or(0_V / 1_rev_per_m_per_s);
 
   return kS * wpi::sgn(vel) + kLG + kRG * units::math::cos(pos) + kV * vel + kA * accel;
 }
@@ -252,9 +250,9 @@ ICSparkConfig ICSpark::UseAbsoluteEncoder(units::turn_t zeroOffset) {
   config.absoluteEncoder.zeroOffset = zeroOffset;
   config.signals.absoluteEncoderPositionAlwaysOn = true;
   config.signals.absoluteEncoderPositionPeriodMs = 10_ms;
-  config.signals.absoluteEncoderVelocityAlwaysOn =true;
+  config.signals.absoluteEncoderVelocityAlwaysOn = true;
   config.signals.absoluteEncoderVelocityPeriodMs = 10_ms;
-  config.closedLoop.feedbackSensor = rev::spark::ClosedLoopConfig::kAbsoluteEncoder;
+  config.closedLoop.feedbackSensor = rev::spark::kAbsoluteEncoder;
   return config;
 }
 
@@ -322,7 +320,7 @@ units::volt_t ICSpark::GetMotorVoltage() {
   if constexpr (frc::RobotBase::IsSimulation()) {
     return CalcSimVoltage();
   } else {
-    return _spark->GetAppliedOutput() * _spark->GetBusVoltage()*1_V;
+    return _spark->GetAppliedOutput() * _spark->GetBusVoltage() * 1_V;
   }
 }
 
@@ -334,7 +332,8 @@ units::volt_t ICSpark::CalcSimVoltage() {
   return _simSpark.GetAppliedOutput() * frc::RobotController::GetBatteryVoltage();
 }
 
-void ICSpark::IterateSim(units::revolutions_per_minute_t velocity, std::optional<units::turn_t> position) {
+void ICSpark::IterateSim(units::revolutions_per_minute_t velocity,
+                         std::optional<units::turn_t> position) {
   const units::second_t dt = 20_ms;
   const units::volt_t batteryVoltage = frc::sim::RoboRioSim::GetVInVoltage();
   _simSpark.iterate(velocity.value(), batteryVoltage.value(), dt.value());

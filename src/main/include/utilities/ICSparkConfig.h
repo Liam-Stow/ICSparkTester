@@ -15,12 +15,19 @@ struct ClosedLoopSlotConfig {
   std::optional<double> p = std::nullopt; 
   std::optional<double> i = std::nullopt;
   std::optional<double> d = std::nullopt;
-  std::optional<double> velocityFF = std::nullopt;
   std::optional<double> dFilter = std::nullopt;
   std::optional<double> iZone = std::nullopt;
   std::optional<double> iMaxAccum = std::nullopt;
   std::optional<double> minOutput = std::nullopt;
   std::optional<double> maxOutput = std::nullopt;
+  struct {
+    std::optional<double> velocityFF = std::nullopt;          // kV
+    std::optional<double> accelerationFF = std::nullopt;      // kA
+    std::optional<double> staticFF = std::nullopt;            // kS
+    std::optional<double> linearGravityFF = std::nullopt;     // kG
+    std::optional<double> rotationalGravityFF = std::nullopt; // kCos
+    std::optional<double> cosineRatio = std::nullopt;         // kCosRatio
+  } feedforward = {};
   struct {
     std::optional<units::revolutions_per_minute_t> maxVelocity = std::nullopt;
     std::optional<units::revolutions_per_minute_per_second_t> maxAcceleration = std::nullopt;
@@ -83,7 +90,7 @@ struct ICSparkConfig {
     std::optional<bool> positionWrappingEnabled = std::nullopt;
     std::optional<units::turn_t> positionWrappingMinInput = std::nullopt;
     std::optional<units::turn_t> positionWrappingMaxInput = std::nullopt;
-    std::optional<rev::spark::ClosedLoopConfig::FeedbackSensor> feedbackSensor = std::nullopt;
+    std::optional<rev::spark::FeedbackSensor> feedbackSensor = std::nullopt;
 
     std::array<ClosedLoopSlotConfig, 4> slots = {
         {{rev::spark::kSlot0}, {rev::spark::kSlot1}, {rev::spark::kSlot2}, {rev::spark::kSlot3}}};
@@ -102,10 +109,14 @@ struct ICSparkConfig {
 
   // Limit switch
   struct {
-    std::optional<bool> forwardLimitSwitchEnabled = std::nullopt;
+    std::optional<bool> sparkMaxDataPortLimitSwitchMode = std::nullopt;
+    std::optional<rev::spark::LimitSwitchConfig::Behavior> forwardLimitSwitchTriggerBehavior = std::nullopt;
     std::optional<rev::spark::LimitSwitchConfig::Type> forwardLimitSwitchType = std::nullopt;
-    std::optional<bool> reverseLimitSwitchEnabled = std::nullopt;
+    std::optional<double> forwardLimitSwitchPosition = std::nullopt;
+    std::optional<rev::spark::LimitSwitchConfig::Behavior> reverseLimitSwitchTriggerBehavior = std::nullopt;
     std::optional<rev::spark::LimitSwitchConfig::Type> reverseLimitSwitchType = std::nullopt;
+    std::optional<double> reverseLimitSwitchPosition = std::nullopt;
+    std::optional<rev::spark::FeedbackSensor> positionSensor = std::nullopt;
   } limitSwitch;
 
   // Signals
