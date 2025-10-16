@@ -55,7 +55,7 @@ TEST_F(ArmTest, wpiProfile) {
   auto cmd = arm.WPIProfileTo(target);
   cmd.Schedule();
   SimCmdScheduler(5_s);
-  ExpectNearAngle(arm.GetPosition(), target);
+  ExpectNearAngle(target, arm.GetPosition());
 }
 
 TEST_F(ArmTest, pid) {
@@ -63,7 +63,7 @@ TEST_F(ArmTest, pid) {
   auto cmd = arm.PIDTo(target);
   cmd.Schedule();
   SimCmdScheduler(2_s);
-  ExpectNearAngle(arm.GetPosition(), target);
+  ExpectNearAngle(target, arm.GetPosition());
 }
 
 
