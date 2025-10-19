@@ -89,16 +89,16 @@ void ICSparkConfig::FillREVConfig(rev::spark::SparkBaseConfig& config) const {
       config.closedLoop.MaxOutput(*slot.maxOutput, slot.slotID);
     if (slot.iMaxAccum)
       config.closedLoop.IMaxAccum(*slot.iMaxAccum, slot.slotID);
-    if (slot.feedforward.velocityFF)
-      config.closedLoop.feedForward.kV(*slot.feedforward.velocityFF, slot.slotID);
-    if (slot.feedforward.accelerationFF)
-      config.closedLoop.feedForward.kA(*slot.feedforward.accelerationFF, slot.slotID);
-    if (slot.feedforward.staticFF)
-      config.closedLoop.feedForward.kS(*slot.feedforward.staticFF, slot.slotID);
-    if (slot.feedforward.linearGravityFF)
-      config.closedLoop.feedForward.kG(*slot.feedforward.linearGravityFF, slot.slotID);
-    if (slot.feedforward.rotationalGravityFF)
-      config.closedLoop.feedForward.kCos(*slot.feedforward.rotationalGravityFF, slot.slotID);
+    if (slot.feedforward.velocity)
+      config.closedLoop.feedForward.kV(slot.feedforward.velocity->value(), slot.slotID);
+    if (slot.feedforward.acceleration)
+      config.closedLoop.feedForward.kA(slot.feedforward.acceleration->value(), slot.slotID);
+    if (slot.feedforward.staticFriction)
+      config.closedLoop.feedForward.kS(slot.feedforward.staticFriction->value(), slot.slotID);
+    if (slot.feedforward.linearGravity)
+      config.closedLoop.feedForward.kG(slot.feedforward.linearGravity->value(), slot.slotID);
+    if (slot.feedforward.rotationalGravity)
+      config.closedLoop.feedForward.kCos(slot.feedforward.rotationalGravity->value(), slot.slotID);
     if (slot.feedforward.cosineRatio)
       config.closedLoop.feedForward.kCosRatio(*slot.feedforward.cosineRatio, slot.slotID);
     if (slot.maxMotion.maxVelocity)
@@ -237,13 +237,6 @@ void ICSparkConfig::Adjust(const ICSparkConfig& other) {
   UpdateOptional(followCanId, other.followCanId);
   UpdateOptional(followInverted, other.followInverted);
 
-  // Feedforward
-  UpdateOptional(feedforward.staticFriction, other.feedforward.staticFriction);
-  UpdateOptional(feedforward.linearGravity, other.feedforward.linearGravity);
-  UpdateOptional(feedforward.rotationalGravity, other.feedforward.rotationalGravity);
-  UpdateOptional(feedforward.velocity, other.feedforward.velocity);
-  UpdateOptional(feedforward.acceleration, other.feedforward.acceleration);
-
   // Absolute Encoder
   UpdateOptional(absoluteEncoder.inverted, other.absoluteEncoder.inverted);
   UpdateOptional(absoluteEncoder.positionConversionFactor,
@@ -279,12 +272,12 @@ void ICSparkConfig::Adjust(const ICSparkConfig& other) {
     UpdateOptional(targetSlot.minOutput, sourceSlot.minOutput);
     UpdateOptional(targetSlot.maxOutput, sourceSlot.maxOutput);
     UpdateOptional(targetSlot.iMaxAccum, sourceSlot.iMaxAccum);
-    UpdateOptional(targetSlot.feedforward.velocityFF, sourceSlot.feedforward.velocityFF);
-    UpdateOptional(targetSlot.feedforward.accelerationFF, sourceSlot.feedforward.accelerationFF);
-    UpdateOptional(targetSlot.feedforward.staticFF, sourceSlot.feedforward.staticFF);
-    UpdateOptional(targetSlot.feedforward.linearGravityFF, sourceSlot.feedforward.linearGravityFF);
-    UpdateOptional(targetSlot.feedforward.rotationalGravityFF,
-                   sourceSlot.feedforward.rotationalGravityFF);
+    UpdateOptional(targetSlot.feedforward.velocity, sourceSlot.feedforward.velocity);
+    UpdateOptional(targetSlot.feedforward.acceleration, sourceSlot.feedforward.acceleration);
+    UpdateOptional(targetSlot.feedforward.staticFriction, sourceSlot.feedforward.staticFriction);
+    UpdateOptional(targetSlot.feedforward.linearGravity, sourceSlot.feedforward.linearGravity);
+    UpdateOptional(targetSlot.feedforward.rotationalGravity,
+                   sourceSlot.feedforward.rotationalGravity);
     UpdateOptional(targetSlot.feedforward.cosineRatio, sourceSlot.feedforward.cosineRatio);
     UpdateOptional(targetSlot.maxMotion.maxVelocity, sourceSlot.maxMotion.maxVelocity);
     UpdateOptional(targetSlot.maxMotion.maxAcceleration, sourceSlot.maxMotion.maxAcceleration);

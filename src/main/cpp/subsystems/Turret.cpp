@@ -12,7 +12,7 @@ Turret::Turret() {
   config.closedLoop.slots[0].maxMotion.maxVelocity = 30_rpm;
   config.closedLoop.slots[0].maxMotion.maxAcceleration = 200_rev_per_m_per_s;
   config.smartCurrentStallLimit = 100_A;
-  config.feedforward.velocity = 0.036_V / 1_rpm;
+  config.closedLoop.slots[0].feedforward.velocity = 0.036_V / 1_rpm;
   _motor.OverwriteConfig(config);
 };
 

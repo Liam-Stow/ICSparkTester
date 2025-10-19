@@ -411,6 +411,17 @@ class ICSpark : public wpi::Sendable {
    */
   void TuneFeedforwardAcceleration(ICSparkConfig::VoltsPerRpmPerS A);
 
+  /**
+   * This sets the ratio that is used to calculate the absolute position of
+   * your arm mechanism for use with RotationalGravity. This is applied after the
+   * conversion factor and should convert from those units to absolute
+   * rotations of your mechanism. Ensure your selected encoder is zeroed such
+   * that 0 = horizontal.
+   * 
+   * @param kCosRatio The kCosRatio in Volts
+   */
+  void TuneFeedforwardCosineRatio(double ratio);
+
   rev::spark::SparkBase* _spark;
   ICSparkConfig _configCache;
 

@@ -1,7 +1,9 @@
 #include "RobotContainer.h"
 #include <frc2/command/Commands.h>
+#include "frc/DriverStation.h"
 
 RobotContainer::RobotContainer() {
+  frc::DriverStation::SilenceJoystickConnectionWarning(true);
   ConfigureBindings();
 }
 

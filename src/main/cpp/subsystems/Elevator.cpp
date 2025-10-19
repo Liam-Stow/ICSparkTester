@@ -11,8 +11,8 @@ Elevator::Elevator() {
     config.closedLoop.slots[0].maxMotion.maxVelocity = 500_rpm;
     config.closedLoop.slots[0].maxMotion.maxAcceleration = 500_rev_per_m_per_s;
     config.smartCurrentStallLimit = 100_A;
-    config.feedforward.linearGravity = 0.16_V;
-    config.feedforward.velocity = 0.02_V / 1_rpm;
+    config.closedLoop.slots[0].feedforward.linearGravity = 0.16_V;
+    config.closedLoop.slots[0].feedforward.velocity = 0.02_V / 1_rpm;
     _motor.OverwriteConfig(config);
 };
 

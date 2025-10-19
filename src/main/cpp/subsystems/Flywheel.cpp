@@ -7,7 +7,7 @@ Flywheel::Flywheel() {
     ICSparkConfig config;
     config.smartCurrentStallLimit = 200_A;
     config.closedLoop.slots[0].p = 0.1;
-    config.feedforward.velocity = 0.0018_V / 1_rpm;
+    config.closedLoop.slots[0].feedforward.velocity = 0.0018_V / 1_rpm;
     _motor.OverwriteConfig(config);
 };
 

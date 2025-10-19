@@ -12,9 +12,9 @@ Arm::Arm() {
   config.closedLoop.slots[0].maxMotion.maxVelocity = 300_rpm;
   config.closedLoop.slots[0].maxMotion.maxAcceleration = 100_rev_per_m_per_s;
   config.smartCurrentStallLimit = 100_A;
-  config.feedforward.rotationalGravity = 0.6_V;
-  config.feedforward.velocity = 0.049_V / 1_rpm;
-  config.feedforward.acceleration = 0.003_V / 1_rev_per_m_per_s;
+  config.closedLoop.slots[0].feedforward.rotationalGravity = 0.6_V;
+  config.closedLoop.slots[0].feedforward.velocity = 0.049_V / 1_rpm;
+  config.closedLoop.slots[0].feedforward.acceleration = 0.003_V / 1_rev_per_m_per_s;
   _motor.OverwriteConfig(config);
 
   _motor.SetPosition(STARTING_ANGLE);

@@ -32,7 +32,7 @@ class Turret : public frc2::SubsystemBase {
 
   // Constants
   static constexpr double GEARING = 20;
-  static constexpr units::kilogram_square_meter_t MOI = 0.01_kg_sq_m;
+  static constexpr units::kilogram_square_meter_t MOI = 0.0001_kg_sq_m;
 
   // Simulation
   static constexpr frc::DCMotor MOTOR_MODEL = frc::DCMotor::NeoVortex();

@@ -121,6 +121,36 @@ TEST_F(FlywheelTest, spinAtDutyCycle) {
 }
 
 
+// TURRET TESTS
+class TurretTest : public testing::Test {
+ protected:
+  Turret turret;
+};
+
+TEST_F(TurretTest, wpiProfile) {
+  auto target = 90_deg;
+  auto cmd = turret.WPIProfileTo(target);
+  cmd.Schedule();
+  SimCmdScheduler(5_s);
+  ExpectNearAngle(target, turret.GetPosition());
+}
+
+TEST_F(TurretTest, pid) {
+  auto target = 90_deg;
+  auto cmd = turret.PIDTo(target);
+  cmd.Schedule();
+  SimCmdScheduler(2_s);
+  ExpectNearAngle(target, turret.GetPosition());
+}
+
+TEST_F(TurretTest, driveWithDutyCycle) {
+  auto target = 0.5;
+  auto cmd = turret.DriveWithDutyCycle(target);
+  cmd.Schedule();
+  SimCmdScheduler(0.5_s); // give it some time to accelerate so the current limit isn't affecting dutycycle
+  EXPECT_NEAR(target, turret.GetMotorDutyCycle(), 0.0001);
+}
+
 // FEEDER TESTS
 class FeederTest : public testing::Test {
  protected:

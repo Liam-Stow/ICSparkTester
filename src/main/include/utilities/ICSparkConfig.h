@@ -10,33 +10,6 @@
 #include <array>
 #include <rev/config/SparkBaseConfig.h>
 
-struct ClosedLoopSlotConfig {
-  rev::spark::ClosedLoopSlot slotID;
-  std::optional<double> p = std::nullopt; 
-  std::optional<double> i = std::nullopt;
-  std::optional<double> d = std::nullopt;
-  std::optional<double> dFilter = std::nullopt;
-  std::optional<double> iZone = std::nullopt;
-  std::optional<double> iMaxAccum = std::nullopt;
-  std::optional<double> minOutput = std::nullopt;
-  std::optional<double> maxOutput = std::nullopt;
-  struct {
-    std::optional<double> velocityFF = std::nullopt;          // kV
-    std::optional<double> accelerationFF = std::nullopt;      // kA
-    std::optional<double> staticFF = std::nullopt;            // kS
-    std::optional<double> linearGravityFF = std::nullopt;     // kG
-    std::optional<double> rotationalGravityFF = std::nullopt; // kCos
-    std::optional<double> cosineRatio = std::nullopt;         // kCosRatio
-  } feedforward = {};
-  struct {
-    std::optional<units::revolutions_per_minute_t> maxVelocity = std::nullopt;
-    std::optional<units::revolutions_per_minute_per_second_t> maxAcceleration = std::nullopt;
-    std::optional<units::turn_t> allowedClosedLoopError = std::nullopt;
-    std::optional<rev::spark::MAXMotionConfig::MAXMotionPositionMode> positionMode = std::nullopt;
-  } maxMotion = {};
-};
-
-
 struct ICSparkConfig {
   using VoltsPerRpm = units::unit_t<units::compound_unit<
       units::volts, units::inverse<units::revolutions_per_minute>>>;
@@ -56,15 +29,6 @@ struct ICSparkConfig {
   std::optional<units::volt_t> voltageCompensationNominalVoltage = std::nullopt;
   std::optional<int> followCanId = std::nullopt;
   std::optional<bool> followInverted = std::nullopt;
-
-  // Feedfowrards (all onbard the rio, not sent to sparks) 
-  struct {
-    std::optional<units::volt_t> staticFriction = std::nullopt;
-    std::optional<units::volt_t> linearGravity = std::nullopt;
-    std::optional<units::volt_t> rotationalGravity = std::nullopt;
-    std::optional<VoltsPerRpm> velocity = std::nullopt;
-    std::optional<VoltsPerRpmPerS> acceleration = std::nullopt;
-  } feedforward;
 
   // Absolute Encoder
   struct {
@@ -86,6 +50,31 @@ struct ICSparkConfig {
   } analogSensor;
 
   // Closed loop
+  struct ClosedLoopSlotConfig {
+    rev::spark::ClosedLoopSlot slotID;
+    std::optional<double> p = std::nullopt; 
+    std::optional<double> i = std::nullopt;
+    std::optional<double> d = std::nullopt;
+    std::optional<double> dFilter = std::nullopt;
+    std::optional<double> iZone = std::nullopt;
+    std::optional<double> iMaxAccum = std::nullopt;
+    std::optional<double> minOutput = std::nullopt;
+    std::optional<double> maxOutput = std::nullopt;
+    struct {
+      std::optional<VoltsPerRpm> velocity = std::nullopt;             // kV
+      std::optional<VoltsPerRpmPerS> acceleration = std::nullopt;     // kA
+      std::optional<units::volt_t> staticFriction = std::nullopt;     // kS
+      std::optional<units::volt_t> linearGravity = std::nullopt;      // kG
+      std::optional<units::volt_t> rotationalGravity = std::nullopt;  // kCos
+      std::optional<double> cosineRatio = std::nullopt;               // kCosRatio
+    } feedforward = {};
+    struct {
+      std::optional<units::revolutions_per_minute_t> maxVelocity = std::nullopt;
+      std::optional<units::revolutions_per_minute_per_second_t> maxAcceleration = std::nullopt;
+      std::optional<units::turn_t> allowedClosedLoopError = std::nullopt;
+      std::optional<rev::spark::MAXMotionConfig::MAXMotionPositionMode> positionMode = std::nullopt;
+    } maxMotion = {};
+  };
   struct {
     std::optional<bool> positionWrappingEnabled = std::nullopt;
     std::optional<units::turn_t> positionWrappingMinInput = std::nullopt;
