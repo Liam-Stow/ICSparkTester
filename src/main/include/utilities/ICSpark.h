@@ -17,7 +17,6 @@
 #include "utilities/ICSparkEncoder.h"
 #include "utilities/ICSparkConfig.h"
 
-
 /**
  * Wrapper around the Rev CANSparkBase class with some convenience features.
  * - Easier simulation support (see CalcSimVoltage() and IterateSim())
@@ -59,8 +58,11 @@ class ICSpark : public wpi::Sendable {
    * @param arbFeedforward A voltage from -32.0V to 32.0V which is applied to the motor after the
    * result of the specified control mode. This value is added after the control mode, but before
    * any current limits or ramp rates
+   *
+   * @param slot The closed loop configuration slot to use for this control action
    */
-  void SetPositionTarget(units::turn_t target, units::volt_t arbFeedForward = 0.0_V);
+  void SetPositionTarget(units::turn_t target, units::volt_t arbFeedForward = 0.0_V,
+                         rev::spark::ClosedLoopSlot slot = rev::spark::ClosedLoopSlot::kSlot0);
 
   /**
    * !! Must periodically call UpdateControls() !!
@@ -69,16 +71,19 @@ class ICSpark : public wpi::Sendable {
    * decelerates in a controlled way. This can reduce ware on components, limit current draw and is
    * easier to tune. Also consider using SetMotionProfileTarget() to compute a profile on the
    * RoboRio and perform feedback control based on position.
-   * 
+   *
    * Relies on periodic calls to UpdateControls() to update the feedforward model and log targets.
-   * 
+   *
    * @param target The target position drive to.
    *
    * @param arbFeedforward A voltage from -32.0V to 32.0V which is applied to the motor after the
    * result of the specified control mode. This value is added after the control mode, but before
    * any current limits or ramp rates
+   *
+   * @param slot The closed loop configuration slot to use for this control action
    */
-  void SetMaxMotionTarget(units::turn_t target, units::volt_t arbFeedForward = 0.0_V);
+  void SetMaxMotionTarget(units::turn_t target, units::volt_t arbFeedForward = 0.0_V,
+                          rev::spark::ClosedLoopSlot slot = rev::spark::ClosedLoopSlot::kSlot0);
 
   /**
    * !! Must periodically call UpdateControls() !!
@@ -87,7 +92,7 @@ class ICSpark : public wpi::Sendable {
    * control. This generates a profiled movement that accelerates and decelerates in a controlled
    * way. This allows model-based feedforward for faster response time, can reduce ware on
    * components, limit current draw and is easier to tune.
-   * 
+   *
    * Relies on periodic calls to UpdateControls() to update the feedforward model and targets.
    *
    * @param target The target position drive to.
@@ -95,8 +100,11 @@ class ICSpark : public wpi::Sendable {
    * @param arbFeedforward A voltage from -32.0V to 32.0V which is applied to the motor after the
    * result of the specified control mode. This value is added after the control mode, but before
    * any current limits or ramp rates
+   *
+   * @param slot The closed loop configuration slot to use for this control action
    */
-  void SetMotionProfileTarget(units::turn_t target, units::volt_t arbFeedForward = 0.0_V);
+  void SetMotionProfileTarget(units::turn_t target, units::volt_t arbFeedForward = 0.0_V,
+                              rev::spark::ClosedLoopSlot slot = rev::spark::ClosedLoopSlot::kSlot0);
 
   /**
    * Sets the closed loop target (aka reference or goal) for the motor to drive to.
@@ -106,8 +114,12 @@ class ICSpark : public wpi::Sendable {
    * @param arbFeedforward A voltage from -32.0V to 32.0V which is applied to the motor after the
    * result of the specified control mode. This value is added after the control mode, but before
    * any current limits or ramp rates
+   *
+   * @param slot The closed loop configuration slot to use for this control action
    */
-  void SetVelocityTarget(units::revolutions_per_minute_t target, units::volt_t arbFeedForward = 0.0_V);
+  void SetVelocityTarget(units::revolutions_per_minute_t target,
+                         units::volt_t arbFeedForward = 0.0_V,
+                         rev::spark::ClosedLoopSlot slot = rev::spark::ClosedLoopSlot::kSlot0);
 
   /**
    * Update motion profile targets and feedforward calculations. This is required to be called
@@ -125,8 +137,9 @@ class ICSpark : public wpi::Sendable {
    * @param vel The velocity target
    * @param accel The acceleration target
    */
-  units::volt_t CalculateFeedforward(units::turn_t pos, units::revolutions_per_minute_t vel,
-                                     units::revolutions_per_minute_per_second_t accel = 0_tr_per_s_sq);
+  units::volt_t CalculateFeedforward(
+      units::turn_t pos, units::revolutions_per_minute_t vel,
+      units::revolutions_per_minute_per_second_t accel = 0_tr_per_s_sq);
 
   /**
    * Gets the current closed loop position target if there is one. Zero otherwise.
@@ -206,19 +219,19 @@ class ICSpark : public wpi::Sendable {
 
   /**
    * Get the duty cycle (-1 to 1) of the motor.
-  */
+   */
   double GetDutyCycle() const;
 
   /**
    * Get the voltage applied to the motor.
-  */
+   */
   units::volt_t GetMotorVoltage();
 
   /**
    * Get the current draw of the motor stator.
    */
   units::ampere_t GetStatorCurrent();
-  
+
   /**
    * Common interface to stop the motor until Set is called again or closed loop control is started.
    */
@@ -291,38 +304,37 @@ class ICSpark : public wpi::Sendable {
    * @param persistMode Whether to persist the parameters after setting the configuration
    * @return REVLibError::kOk if successful
    */
-  rev::REVLibError Configure(ICSparkConfig& config,
-                             rev::spark::SparkBase::ResetMode resetMode,
+  rev::REVLibError Configure(ICSparkConfig& config, rev::spark::SparkBase::ResetMode resetMode,
                              rev::spark::SparkBase::PersistMode persistMode);
 
-  /**  
-   * Convenience method for calling 
+  /**
+   * Convenience method for calling
    * Configure(config, ResetMode::kNoResetSafeParameters, PersistMode::kPersistParameters)
    */
-  rev::REVLibError AdjustConfig(ICSparkConfig &config);
+  rev::REVLibError AdjustConfig(ICSparkConfig& config);
 
-  /**  
-   * Convenience method for calling 
+  /**
+   * Convenience method for calling
    * Configure(config, ResetMode::kNoResetSafeParameters, PersistMode::kNoPersistParameters)
    */
-  rev::REVLibError AdjustConfigNoPersist(ICSparkConfig &config);
+  rev::REVLibError AdjustConfigNoPersist(ICSparkConfig& config);
 
-  /**  
-   * Convenience method for calling 
+  /**
+   * Convenience method for calling
    * Configure(config, ResetMode::kResetSafeParameters, PersistMode::kPersistParameters)
    */
-  rev::REVLibError OverwriteConfig(ICSparkConfig &config);
+  rev::REVLibError OverwriteConfig(ICSparkConfig& config);
 
   /**
    * Read the current configuration of the SPARK.
-   * 
+   *
    * @return The current SPARK configuration, using the ICSparkConfig format.
    */
   ICSparkConfig GetCachedConfig() const;
 
   // Sendable setup, called automatically when this is passed into smartDashbaord::PutData()
   void InitSendable(wpi::SendableBuilder& builder) override;
-  
+
  protected:
   // Use a relative (alternarte for Max, external for Flex) encoder as the logging device.
   template <std::derived_from<rev::RelativeEncoder> RelEncoder>
@@ -375,7 +387,7 @@ class ICSpark : public wpi::Sendable {
 
   /**
    * Set the Static Friction gain constant of the feed forward model.
-   * 
+   *
    * @param S Constant voltage to overcome static friction in the system.
    */
   void TuneFeedforwardStaticFriction(units::volt_t S);
@@ -383,14 +395,14 @@ class ICSpark : public wpi::Sendable {
   /**
    * Set the Linear Gravity gain constant of the feed forward model. linearG is a constant voltage
    * that is always applied, regardless of direction of travel. Useful on elevators.
-   * 
+   *
    * @param linearG Voltage to overcome linear gravity in the system.
    */
   void TuneFeedforwardLinearGravity(units::volt_t linearG);
 
   /**
    * Set the Rotational Gravity gain constant of the feed forward model. Gravity compensation
-   * voltage is calculated as rotationalG * cos(angle). Meaning, rotationalG should be the voltage 
+   * voltage is calculated as rotationalG * cos(angle). Meaning, rotationalG should be the voltage
    * to compensate gravity when the mechanism is at 0 degrees. Useful on arms.
    *
    * @param rotationalG Voltage to overcome rotational gravity in the system.
@@ -403,10 +415,10 @@ class ICSpark : public wpi::Sendable {
    * @param V Voltage to travel at a desired velocity.
    */
   void TuneFeedforwardVelocity(ICSparkConfig::VoltsPerRpm V);
-  
+
   /**
    * Set the Acceleration gain constant of the feed forward model.
-   * 
+   *
    * @param A Voltage to travel at a desired acceleration.
    */
   void TuneFeedforwardAcceleration(ICSparkConfig::VoltsPerRpmPerS A);
@@ -417,7 +429,7 @@ class ICSpark : public wpi::Sendable {
    * conversion factor and should convert from those units to absolute
    * rotations of your mechanism. Ensure your selected encoder is zeroed such
    * that 0 = horizontal.
-   * 
+   *
    * @param kCosRatio The kCosRatio in Volts
    */
   void TuneFeedforwardCosineRatio(double ratio);
@@ -428,6 +440,8 @@ class ICSpark : public wpi::Sendable {
   // Feedback control objects
   rev::spark::SparkClosedLoopController _sparkPidController{_spark->GetClosedLoopController()};
   ICSparkEncoder _encoder;
+  rev::spark::ClosedLoopSlot _activeClosedLoopSlot = rev::spark::kSlot0;
+  ICSparkConfig::ClosedLoopSlotConfig& GetActiveSlotConfig();
 
   // Feedforward gains
   units::volt_t _arbFeedForward = 0.0_V;

@@ -21,34 +21,30 @@ ICSpark::ICSpark(rev::spark::SparkBase* spark, rev::spark::SparkRelativeEncoder&
 
 void ICSpark::InitSendable(wpi::SendableBuilder& builder) {
   // clang-format off
-  //----------------------- Label ------------------------ Getter --------------------------------------------------------------------------------------- Setter -------------------------------------------------
-  builder.AddDoubleProperty("Position",                   [&] { return GetPosition().value(); },                                                          nullptr);
-  builder.AddDoubleProperty("Velocity",                   [&] { return GetVelocity().value(); },                                                          nullptr);
-  builder.AddDoubleProperty("Duty Cycle",                 [&] { return GetDutyCycle(); },                                                                 nullptr);
-  builder.AddDoubleProperty("Voltage",                    [&] { return GetMotorVoltage().value(); },                                                      nullptr);
-  builder.AddDoubleProperty("Current",                    [&] { return GetStatorCurrent().value(); },                                                     nullptr);
-  builder.AddDoubleProperty("Temperature",                [&] { return _spark->GetMotorTemperature(); },                                                  nullptr);
-  builder.AddDoubleProperty("Position conversion factor", [&] { return _configCache.encoder.positionConversionFactor.value_or(1); },                      nullptr);
-  builder.AddDoubleProperty("Velocity conversion factor", [&] { return _configCache.encoder.velocityConversionFactor.value_or(1); },                      nullptr);
-  builder.AddDoubleProperty("Position Target",            [&] { return _positionTarget.value(); },                                                        [&](double targ) { SetPositionTarget(targ*1_tr); });
-  builder.AddDoubleProperty("Velocity Target",            [&] { return _velocityTarget.value(); },                                                        [&](double targ) { SetVelocityTarget(targ*1_tps); });
-  builder.AddDoubleProperty("Profile Position Target",    [&] { return _latestMotionTarget.position.value(); },                                           [&](double targ) { SetMotionProfileTarget(targ*1_tr); });
-  builder.AddDoubleProperty("Profile Velocity Target",    [&] { return _latestMotionTarget.velocity.convert<units::revolutions_per_minute>().value(); },  nullptr);
-  builder.AddDoubleProperty("Gains/FB P Gain",            [&] { return _configCache.closedLoop.slots[0].p.value_or(0); },                                 [&](double P) { TuneFeedbackProportional(P); });
-  builder.AddDoubleProperty("Gains/FB I Gain",            [&] { return _configCache.closedLoop.slots[0].i.value_or(0); },                                 [&](double I) { TuneFeedbackIntegral(I); });
-  builder.AddDoubleProperty("Gains/FB D Gain",            [&] { return _configCache.closedLoop.slots[0].d.value_or(0); },                                 [&](double D) { TuneFeedbackDerivative(D); });
-  builder.AddDoubleProperty("Gains/FF S Gain",            [&] { return _configCache.closedLoop.slots[0].feedforward.staticFriction.value_or(0_V).value(); },                  [&](double S) { TuneFeedforwardStaticFriction(S*1_V); });
-  builder.AddDoubleProperty("Gains/FF Linear G Gain",     [&] { return _configCache.closedLoop.slots[0].feedforward.linearGravity.value_or(0_V).value(); },                   [&](double lG) { TuneFeedforwardLinearGravity(lG*1_V); });
-  builder.AddDoubleProperty("Gains/FF Rotational G Gain", [&] { return _configCache.closedLoop.slots[0].feedforward.rotationalGravity.value_or(0_V).value(); },               [&](double rG) { TuneFeedforwardRotationalGravity(rG*1_V); });
-  builder.AddDoubleProperty("Gains/FF V Gain",            [&] { return _configCache.closedLoop.slots[0].feedforward.velocity.value_or(0_V/1_rpm).value(); },                  [&](double V) { TuneFeedforwardVelocity(ICSparkConfig::VoltsPerRpm{V}); });
-  builder.AddDoubleProperty("Gains/FF A Gain",            [&] { return _configCache.closedLoop.slots[0].feedforward.acceleration.value_or(0_V/1_rev_per_m_per_s).value(); },  [&](double A) { TuneFeedforwardAcceleration(ICSparkConfig::VoltsPerRpmPerS{A}); });
-  
-  builder.AddDoubleProperty("Motion Config/Max vel",      
-    [&] { return _configCache.closedLoop.slots[0].maxMotion.maxVelocity.value_or(0_rpm).value(); },              
-    [&](double vel) { SetMotionMaxVel(vel*1_rpm); });
-  builder.AddDoubleProperty("Motion Config/Max accel",
-    [&] { return _configCache.closedLoop.slots[0].maxMotion.maxAcceleration.value_or(0_rev_per_m_per_s).value(); },
-    [&](double accel) { SetMotionMaxAccel(accel*1_rev_per_m_per_s); });
+  //----------------------- Label ------------------------ Getter ------------------------------------------------------------------------------------------------- Setter -------------------------------------------------
+  builder.AddDoubleProperty("Position",                   [&] { return GetPosition().value(); },                                                                    nullptr);
+  builder.AddDoubleProperty("Velocity",                   [&] { return GetVelocity().value(); },                                                                    nullptr);
+  builder.AddDoubleProperty("Duty Cycle",                 [&] { return GetDutyCycle(); },                                                                           nullptr);
+  builder.AddDoubleProperty("Voltage",                    [&] { return GetMotorVoltage().value(); },                                                                nullptr);
+  builder.AddDoubleProperty("Current",                    [&] { return GetStatorCurrent().value(); },                                                               nullptr);
+  builder.AddDoubleProperty("Temperature",                [&] { return _spark->GetMotorTemperature(); },                                                            nullptr);
+  builder.AddDoubleProperty("Position conversion factor", [&] { return _configCache.encoder.positionConversionFactor.value_or(1); },                                nullptr);
+  builder.AddDoubleProperty("Velocity conversion factor", [&] { return _configCache.encoder.velocityConversionFactor.value_or(1); },                                nullptr);
+  builder.AddDoubleProperty("Position Target",            [&] { return _positionTarget.value(); },                                                                  [&](double targ) { SetPositionTarget(targ*1_tr); });
+  builder.AddDoubleProperty("Velocity Target",            [&] { return _velocityTarget.value(); },                                                                  [&](double targ) { SetVelocityTarget(targ*1_tps); });
+  builder.AddDoubleProperty("Profile Position Target",    [&] { return _latestMotionTarget.position.value(); },                                                     [&](double targ) { SetMotionProfileTarget(targ*1_tr); });
+  builder.AddDoubleProperty("Profile Velocity Target",    [&] { return _latestMotionTarget.velocity.convert<units::revolutions_per_minute>().value(); },            nullptr);
+  builder.AddDoubleProperty("Gains/Active Slot",          [&] { return _activeClosedLoopSlot; },                                                                    nullptr);
+  builder.AddDoubleProperty("Gains/FB P Gain",            [&] { return GetActiveSlotConfig().p.value_or(0); },                                                      [&](double P) { TuneFeedbackProportional(P); });
+  builder.AddDoubleProperty("Gains/FB I Gain",            [&] { return GetActiveSlotConfig().i.value_or(0); },                                                      [&](double I) { TuneFeedbackIntegral(I); });
+  builder.AddDoubleProperty("Gains/FB D Gain",            [&] { return GetActiveSlotConfig().d.value_or(0); },                                                      [&](double D) { TuneFeedbackDerivative(D); });
+  builder.AddDoubleProperty("Gains/FF S Gain",            [&] { return GetActiveSlotConfig().feedforward.staticFriction.value_or(0_V).value(); },                   [&](double S) { TuneFeedforwardStaticFriction(S*1_V); });
+  builder.AddDoubleProperty("Gains/FF Linear G Gain",     [&] { return GetActiveSlotConfig().feedforward.linearGravity.value_or(0_V).value(); },                    [&](double lG) { TuneFeedforwardLinearGravity(lG*1_V); });
+  builder.AddDoubleProperty("Gains/FF Rotational G Gain", [&] { return GetActiveSlotConfig().feedforward.rotationalGravity.value_or(0_V).value(); },                [&](double rG) { TuneFeedforwardRotationalGravity(rG*1_V); });
+  builder.AddDoubleProperty("Gains/FF V Gain",            [&] { return GetActiveSlotConfig().feedforward.velocity.value_or(0_V/1_rpm).value(); },                   [&](double V) { TuneFeedforwardVelocity(ICSparkConfig::VoltsPerRpm{V}); });
+  builder.AddDoubleProperty("Gains/FF A Gain",            [&] { return GetActiveSlotConfig().feedforward.acceleration.value_or(0_V/1_rev_per_m_per_s).value(); },   [&](double A) { TuneFeedforwardAcceleration(ICSparkConfig::VoltsPerRpmPerS{A}); });
+  builder.AddDoubleProperty("Motion Config/Max vel",      [&] { return GetActiveSlotConfig().maxMotion.maxVelocity.value_or(0_rpm).value(); },                      [&](double vel) { SetMotionMaxVel(vel*1_rpm); });
+  builder.AddDoubleProperty("Motion Config/Max accel",    [&] { return GetActiveSlotConfig().maxMotion.maxAcceleration.value_or(0_rev_per_m_per_s).value(); },      [&](double accel) { SetMotionMaxAccel(accel*1_rev_per_m_per_s); });
   // clang-format on
 }
 
@@ -62,11 +58,10 @@ rev::REVLibError ICSpark::Configure(ICSparkConfig& config,
     _configCache.Adjust(config);
   }
 
-  // Motion profile config for sim and feed forward model
-  auto& slot0 = _configCache.closedLoop.slots[0];
+  // Match wpilib motion profile config to max motion config
   _motionProfile = frc::TrapezoidProfile<units::turns>{
-      {slot0.maxMotion.maxVelocity.value_or(0_tps),
-       slot0.maxMotion.maxAcceleration.value_or(0_tr_per_s_sq)}};
+      {GetActiveSlotConfig().maxMotion.maxVelocity.value_or(0_tps),
+       GetActiveSlotConfig().maxMotion.maxAcceleration.value_or(0_tr_per_s_sq)}};
 
   // Run the configuration and return any errors
   rev::spark::SparkBaseConfig revConfig;
@@ -217,12 +212,11 @@ void ICSpark::UpdateControls(units::second_t loopTime) {
 
 units::volt_t ICSpark::CalculateFeedforward(units::turn_t pos, units::revolutions_per_minute_t vel,
                                             units::revolutions_per_minute_per_second_t accel) {
-  auto kS = _configCache.closedLoop.slots[0].feedforward.staticFriction.value_or(0_V);
-  auto kLG = _configCache.closedLoop.slots[0].feedforward.linearGravity.value_or(0_V);
-  auto kRG = _configCache.closedLoop.slots[0].feedforward.rotationalGravity.value_or(0_V);
-  auto kV = _configCache.closedLoop.slots[0].feedforward.velocity.value_or(0_V / 1_rpm);
-  auto kA =
-      _configCache.closedLoop.slots[0].feedforward.acceleration.value_or(0_V / 1_rev_per_m_per_s);
+  auto kS = GetActiveSlotConfig().feedforward.staticFriction.value_or(0_V);
+  auto kLG = GetActiveSlotConfig().feedforward.linearGravity.value_or(0_V);
+  auto kRG = GetActiveSlotConfig().feedforward.rotationalGravity.value_or(0_V);
+  auto kV = GetActiveSlotConfig().feedforward.velocity.value_or(0_V / 1_rpm);
+  auto kA = GetActiveSlotConfig().feedforward.acceleration.value_or(0_V / 1_rev_per_m_per_s);
 
   return kS * wpi::sgn(vel) + kLG + kRG * units::math::cos(pos) + kV * vel + kA * accel;
 }
@@ -238,13 +232,13 @@ rev::spark::SparkLowLevel::ControlType ICSpark::GetREVControlType() {
 
 void ICSpark::SetMotionMaxVel(units::revolutions_per_minute_t maxVelocity) {
   ICSparkConfig config;
-  config.closedLoop.slots[0].maxMotion.maxVelocity = maxVelocity;
+  config.closedLoop.slots[_activeClosedLoopSlot].maxMotion.maxVelocity = maxVelocity;
   AdjustConfig(config);
 }
 
 void ICSpark::SetMotionMaxAccel(units::revolutions_per_minute_per_second_t maxAcceleration) {
   ICSparkConfig config;
-  config.closedLoop.slots[0].maxMotion.maxAcceleration = maxAcceleration;
+  config.closedLoop.slots[_activeClosedLoopSlot].maxMotion.maxAcceleration = maxAcceleration;
   AdjustConfig(config);
 }
 
@@ -265,55 +259,55 @@ ICSparkConfig ICSpark::UseAbsoluteEncoder(units::turn_t zeroOffset) {
 
 void ICSpark::TuneFeedbackProportional(double P) {
   ICSparkConfig config;
-  config.closedLoop.slots[0].p = P;
+  config.closedLoop.slots[_activeClosedLoopSlot].p = P;
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedbackIntegral(double I) {
   ICSparkConfig config;
-  config.closedLoop.slots[0].i = I;
+  config.closedLoop.slots[_activeClosedLoopSlot].i = I;
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedbackDerivative(double D) {
   ICSparkConfig config;
-  config.closedLoop.slots[0].d = D;
+  config.closedLoop.slots[_activeClosedLoopSlot].d = D;
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedforwardStaticFriction(units::volt_t S) {
   ICSparkConfig config;
-  config.closedLoop.slots[0].feedforward.staticFriction = S;
+  config.closedLoop.slots[_activeClosedLoopSlot].feedforward.staticFriction = S;
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedforwardLinearGravity(units::volt_t linearG) {
   ICSparkConfig config;
-  config.closedLoop.slots[0].feedforward.linearGravity = linearG;
+  config.closedLoop.slots[_activeClosedLoopSlot].feedforward.linearGravity = linearG;
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedforwardRotationalGravity(units::volt_t rotationalG) {
   ICSparkConfig config;
-  config.closedLoop.slots[0].feedforward.rotationalGravity = rotationalG;
+  config.closedLoop.slots[_activeClosedLoopSlot].feedforward.rotationalGravity = rotationalG;
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedforwardVelocity(ICSparkConfig::VoltsPerRpm V) {
   ICSparkConfig config;
-  config.closedLoop.slots[0].feedforward.velocity = V;
+  config.closedLoop.slots[_activeClosedLoopSlot].feedforward.velocity = V;
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedforwardAcceleration(ICSparkConfig::VoltsPerRpmPerS A) {
   ICSparkConfig config;
-  config.closedLoop.slots[0].feedforward.acceleration = A;
+  config.closedLoop.slots[_activeClosedLoopSlot].feedforward.acceleration = A;
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedforwardCosineRatio(double ratio) {
   ICSparkConfig config;
-  config.closedLoop.slots[0].feedforward.cosineRatio = ratio;
+  config.closedLoop.slots[_activeClosedLoopSlot].feedforward.cosineRatio = ratio;
   AdjustConfigNoPersist(config);
 }
 
@@ -363,11 +357,14 @@ bool ICSpark::InMotionMode() {
          GetControlType() == ControlType::kMaxMotion;
 }
 
+ICSparkConfig::ClosedLoopSlotConfig& ICSpark::GetActiveSlotConfig() {
+  return _configCache.closedLoop.slots[(int)_activeClosedLoopSlot];
+}
+
 ICSpark::MPState ICSpark::CalcNextMotionTarget(MPState current, units::turn_t goalPosition,
                                                units::second_t lookahead) {
   units::turn_t error = units::math::abs(goalPosition - current.position);
-  units::turn_t tolerance =
-      _configCache.closedLoop.slots[0].maxMotion.allowedClosedLoopError.value_or(0_tr);
+  units::turn_t tolerance = GetActiveSlotConfig().maxMotion.allowedClosedLoopError.value_or(0_tr);
   if (error < tolerance) {
     return MPState{current.position, 0_rpm};
   }
