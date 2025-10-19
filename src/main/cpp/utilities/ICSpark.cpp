@@ -195,7 +195,6 @@ void ICSpark::UpdateControls(units::second_t loopTime) {
     case ControlType::kPosition:
       sparkTarget = _positionTarget.value();
       _latestMotionTarget = {_positionTarget, 0_rpm};
-      accelTarget = (_latestMotionTarget.velocity - prevVelTarget) / loopTime;
       _latestModelFeedForward = CalculateFeedforward(_latestMotionTarget.position,
                                                      _latestMotionTarget.velocity, accelTarget);
       prevVelTarget = 0_rpm;
@@ -203,7 +202,6 @@ void ICSpark::UpdateControls(units::second_t loopTime) {
     case ControlType::kVelocity:
       sparkTarget = _velocityTarget.value();
       _latestMotionTarget = {0_tr, _velocityTarget};
-      accelTarget = (_latestMotionTarget.velocity - prevVelTarget) / loopTime;
       _latestModelFeedForward = CalculateFeedforward(_latestMotionTarget.position,
                                                      _latestMotionTarget.velocity, accelTarget);
       prevVelTarget = _velocityTarget;
