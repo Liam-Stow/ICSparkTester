@@ -92,7 +92,8 @@ void ICSpark::SetPosition(units::turn_t position) {
   _encoder.SetPosition(position.value());
 }
 
-void ICSpark::SetPositionTarget(units::turn_t target, units::volt_t arbFeedForward) {
+void ICSpark::SetPositionTarget(units::turn_t target, units::volt_t arbFeedForward,
+                                rev::spark::ClosedLoopSlot slot) {
   _positionTarget = target;
   _velocityTarget = units::revolutions_per_minute_t{0};
   _voltageTarget = 0_V;
@@ -105,7 +106,8 @@ void ICSpark::SetPositionTarget(units::turn_t target, units::volt_t arbFeedForwa
                                   _arbFeedForward.value() + _latestModelFeedForward.value());
 }
 
-void ICSpark::SetMaxMotionTarget(units::turn_t target, units::volt_t arbFeedForward) {
+void ICSpark::SetMaxMotionTarget(units::turn_t target, units::volt_t arbFeedForward,
+                                 rev::spark::ClosedLoopSlot slot) {
   _positionTarget = target;
   _velocityTarget = units::revolutions_per_minute_t{0};
   _voltageTarget = 0_V;
@@ -116,7 +118,8 @@ void ICSpark::SetMaxMotionTarget(units::turn_t target, units::volt_t arbFeedForw
   UpdateControls();
 }
 
-void ICSpark::SetMotionProfileTarget(units::turn_t target, units::volt_t arbFeedForward) {
+void ICSpark::SetMotionProfileTarget(units::turn_t target, units::volt_t arbFeedForward,
+                                     rev::spark::ClosedLoopSlot slot) {
   _positionTarget = target;
   _velocityTarget = units::revolutions_per_minute_t{0};
   _voltageTarget = 0_V;
@@ -128,7 +131,7 @@ void ICSpark::SetMotionProfileTarget(units::turn_t target, units::volt_t arbFeed
 }
 
 void ICSpark::SetVelocityTarget(units::revolutions_per_minute_t target,
-                                units::volt_t arbFeedForward) {
+                                units::volt_t arbFeedForward, rev::spark::ClosedLoopSlot slot) {
   _velocityTarget = target;
   _positionTarget = units::turn_t{0};
   _voltageTarget = 0_V;
