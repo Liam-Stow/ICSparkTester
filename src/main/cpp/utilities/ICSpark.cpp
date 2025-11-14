@@ -100,10 +100,10 @@ void ICSpark::SetPositionTarget(units::turn_t target, units::volt_t arbFeedForwa
   _arbFeedForward = arbFeedForward;
   _latestModelFeedForward = CalculateFeedforward(target, 0_tps);
   _controlType = ControlType::kPosition;
+  _activeClosedLoopSlot = slot;
 
   _sparkPidController.SetSetpoint(target.value(), rev::spark::SparkLowLevel::ControlType::kPosition,
-                                  rev::spark::ClosedLoopSlot::kSlot0,
-                                  _arbFeedForward.value() + _latestModelFeedForward.value());
+                                  slot, _arbFeedForward.value() + _latestModelFeedForward.value());
 }
 
 void ICSpark::SetMaxMotionTarget(units::turn_t target, units::volt_t arbFeedForward,
@@ -114,6 +114,7 @@ void ICSpark::SetMaxMotionTarget(units::turn_t target, units::volt_t arbFeedForw
   _arbFeedForward = arbFeedForward;
   _latestMotionTarget = {GetPosition(), GetVelocity()};
   _controlType = ControlType::kMaxMotion;
+  _activeClosedLoopSlot = slot;
 
   UpdateControls();
 }
@@ -126,6 +127,7 @@ void ICSpark::SetMotionProfileTarget(units::turn_t target, units::volt_t arbFeed
   _arbFeedForward = arbFeedForward;
   _latestMotionTarget = {GetPosition(), GetVelocity()};
   _controlType = ControlType::kMotionProfile;
+  _activeClosedLoopSlot = slot;
 
   UpdateControls();
 }
@@ -138,10 +140,10 @@ void ICSpark::SetVelocityTarget(units::revolutions_per_minute_t target,
   _arbFeedForward = arbFeedForward;
   _latestModelFeedForward = CalculateFeedforward(0_tr, _velocityTarget);
   _controlType = ControlType::kVelocity;
+  _activeClosedLoopSlot = slot;
 
   _sparkPidController.SetSetpoint(target.value(), rev::spark::SparkLowLevel::ControlType::kVelocity,
-                                  rev::spark::ClosedLoopSlot::kSlot0,
-                                  _arbFeedForward.value() + _latestModelFeedForward.value());
+                                  slot, _arbFeedForward.value() + _latestModelFeedForward.value());
 }
 
 void ICSpark::SetDutyCycle(double speed) {
@@ -209,8 +211,8 @@ void ICSpark::UpdateControls(units::second_t loopTime) {
   }
 
   units::volt_t feedforward = _arbFeedForward + _latestModelFeedForward;
-  _sparkPidController.SetSetpoint(sparkTarget, GetREVControlType(),
-                                  rev::spark::ClosedLoopSlot::kSlot0, feedforward.value());
+  _sparkPidController.SetSetpoint(sparkTarget, GetREVControlType(), _activeClosedLoopSlot,
+                                  feedforward.value());
 }
 
 units::volt_t ICSpark::CalculateFeedforward(units::turn_t pos, units::revolutions_per_minute_t vel,
