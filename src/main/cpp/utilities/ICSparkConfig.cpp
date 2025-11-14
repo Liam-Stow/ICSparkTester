@@ -1,12 +1,14 @@
 #include "utilities/ICSparkConfig.h"
 #include <tuple>
 
+namespace {
 template <typename T>
 void UpdateOptional(std::optional<T>& target, const std::optional<T>& source) {
   if (source) {
     target = source;
   }
 }
+}  // anonymous namespace
 
 void ICSparkConfig::FillREVConfig(rev::spark::SparkBaseConfig& config) const {
   if (inverted)
@@ -20,20 +22,22 @@ void ICSparkConfig::FillREVConfig(rev::spark::SparkBaseConfig& config) const {
     config.SmartCurrentLimit(smartCurrentStallLimit->value());
   if (smartCurrentStallLimit && smartCurrentFreeLimit && !smartCurrentVelocityLimit)
     config.SmartCurrentLimit(smartCurrentStallLimit->value(), smartCurrentFreeLimit->value());
+  if (smartCurrentStallLimit && !smartCurrentFreeLimit && smartCurrentVelocityLimit)
+    config.SmartCurrentLimit(smartCurrentStallLimit->value(), 0, smartCurrentVelocityLimit->value());
   if (secondaryCurrentLimit && secondaryCurrentLimitChopCycles)
     config.SecondaryCurrentLimit(secondaryCurrentLimit->value(), *secondaryCurrentLimitChopCycles);
+  if (secondaryCurrentLimit && !secondaryCurrentLimitChopCycles)
+    config.SecondaryCurrentLimit(secondaryCurrentLimit->value());
   if (openLoopRampRate)
     config.OpenLoopRampRate(openLoopRampRate->value());
   if (closedLoopRampRate)
     config.ClosedLoopRampRate(closedLoopRampRate->value());
-  if (voltageCompensationNominalVoltage)
-    config.VoltageCompensation(voltageCompensationNominalVoltage->value());
+  if (voltageCompensationEnabled.value_or(false))
+    config.VoltageCompensation(voltageCompensationNominalVoltage.value_or(0_V).value());
   else
     config.DisableVoltageCompensation();
-  if (followCanId && followInverted)
-    config.Follow(*followCanId, *followInverted);
   if (followCanId)
-    config.Follow(*followCanId);
+    config.Follow(*followCanId, followInverted.value_or(false));
 
   // Absolute Encoder
   if (absoluteEncoder.inverted)
@@ -130,6 +134,10 @@ void ICSparkConfig::FillREVConfig(rev::spark::SparkBaseConfig& config) const {
     config.encoder.UvwMeasurementPeriod(encoder.uvwMeasurementPeriod->value());
 
   // Limit switch
+  if (limitSwitch.sparkMaxDataPortLimitSwitchMode.value_or(false))
+    config.limitSwitch.SetSparkMaxDataPortConfig();
+  if (limitSwitch.positionSensor)
+    config.limitSwitch.LimitSwitchPositionSensor(*limitSwitch.positionSensor);
   if (limitSwitch.forwardLimitSwitchPosition)
     config.limitSwitch.ForwardLimitSwitchPosition(*limitSwitch.forwardLimitSwitchPosition);
   if (limitSwitch.forwardLimitSwitchTriggerBehavior)
@@ -144,8 +152,6 @@ void ICSparkConfig::FillREVConfig(rev::spark::SparkBaseConfig& config) const {
         *limitSwitch.reverseLimitSwitchTriggerBehavior);
   if (limitSwitch.reverseLimitSwitchType)
     config.limitSwitch.ReverseLimitSwitchType(*limitSwitch.reverseLimitSwitchType);
-  if (limitSwitch.positionSensor)
-    config.limitSwitch.LimitSwitchPositionSensor(*limitSwitch.positionSensor);
 
   // Signals
   if (signals.appliedOutputPeriodMs)

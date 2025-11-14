@@ -21,12 +21,13 @@ struct ICSparkConfig {
   std::optional<rev::spark::SparkBaseConfig::IdleMode> idleMode = std::nullopt;
   std::optional<units::ampere_t> smartCurrentStallLimit = std::nullopt;
   std::optional<units::ampere_t> smartCurrentFreeLimit = std::nullopt;
-  std::optional<units::turns_per_second_t> smartCurrentVelocityLimit = std::nullopt;
+  std::optional<units::revolutions_per_minute_t> smartCurrentVelocityLimit = std::nullopt;
   std::optional<units::ampere_t> secondaryCurrentLimit = std::nullopt;
   std::optional<int> secondaryCurrentLimitChopCycles = std::nullopt;
   std::optional<units::second_t> openLoopRampRate = std::nullopt;
   std::optional<units::second_t> closedLoopRampRate = std::nullopt;
   std::optional<units::volt_t> voltageCompensationNominalVoltage = std::nullopt;
+  std::optional<bool> voltageCompensationEnabled = std::nullopt;
   std::optional<int> followCanId = std::nullopt;
   std::optional<bool> followInverted = std::nullopt;
 
@@ -99,12 +100,12 @@ struct ICSparkConfig {
   // Limit switch
   struct {
     std::optional<bool> sparkMaxDataPortLimitSwitchMode = std::nullopt;
+    std::optional<double> forwardLimitSwitchPosition = std::nullopt;
     std::optional<rev::spark::LimitSwitchConfig::Behavior> forwardLimitSwitchTriggerBehavior = std::nullopt;
     std::optional<rev::spark::LimitSwitchConfig::Type> forwardLimitSwitchType = std::nullopt;
-    std::optional<double> forwardLimitSwitchPosition = std::nullopt;
+    std::optional<double> reverseLimitSwitchPosition = std::nullopt;
     std::optional<rev::spark::LimitSwitchConfig::Behavior> reverseLimitSwitchTriggerBehavior = std::nullopt;
     std::optional<rev::spark::LimitSwitchConfig::Type> reverseLimitSwitchType = std::nullopt;
-    std::optional<double> reverseLimitSwitchPosition = std::nullopt;
     std::optional<rev::spark::FeedbackSensor> positionSensor = std::nullopt;
   } limitSwitch;
 
