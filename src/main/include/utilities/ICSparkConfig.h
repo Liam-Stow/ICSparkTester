@@ -20,7 +20,7 @@ struct ICSparkConfig {
   std::optional<bool> inverted;
   std::optional<rev::spark::SparkBaseConfig::IdleMode> idleMode = std::nullopt;
   std::optional<units::ampere_t> smartCurrentStallLimit = std::nullopt;
-  std::optional<units::ampere_t> smartCurrentfreeLimit = std::nullopt;
+  std::optional<units::ampere_t> smartCurrentFreeLimit = std::nullopt;
   std::optional<units::turns_per_second_t> smartCurrentVelocityLimit = std::nullopt;
   std::optional<units::ampere_t> secondaryCurrentLimit = std::nullopt;
   std::optional<int> secondaryCurrentLimitChopCycles = std::nullopt;

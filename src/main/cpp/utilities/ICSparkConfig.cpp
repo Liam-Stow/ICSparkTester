@@ -13,13 +13,13 @@ void ICSparkConfig::FillREVConfig(rev::spark::SparkBaseConfig& config) const {
     config.Inverted(*inverted);
   if (idleMode)
     config.SetIdleMode(*idleMode);
-  if (smartCurrentStallLimit && smartCurrentfreeLimit && smartCurrentVelocityLimit)
-    config.SmartCurrentLimit(smartCurrentStallLimit->value(), smartCurrentfreeLimit->value(),
+  if (smartCurrentStallLimit && smartCurrentFreeLimit && smartCurrentVelocityLimit)
+    config.SmartCurrentLimit(smartCurrentStallLimit->value(), smartCurrentFreeLimit->value(),
                              smartCurrentVelocityLimit->value());
-  if (smartCurrentStallLimit && !smartCurrentfreeLimit && !smartCurrentVelocityLimit)
+  if (smartCurrentStallLimit && !smartCurrentFreeLimit && !smartCurrentVelocityLimit)
     config.SmartCurrentLimit(smartCurrentStallLimit->value());
-  if (smartCurrentStallLimit && smartCurrentfreeLimit && !smartCurrentVelocityLimit)
-    config.SmartCurrentLimit(smartCurrentStallLimit->value(), smartCurrentfreeLimit->value());
+  if (smartCurrentStallLimit && smartCurrentFreeLimit && !smartCurrentVelocityLimit)
+    config.SmartCurrentLimit(smartCurrentStallLimit->value(), smartCurrentFreeLimit->value());
   if (secondaryCurrentLimit && secondaryCurrentLimitChopCycles)
     config.SecondaryCurrentLimit(secondaryCurrentLimit->value(), *secondaryCurrentLimitChopCycles);
   if (openLoopRampRate)
@@ -227,7 +227,7 @@ void ICSparkConfig::Adjust(const ICSparkConfig& other) {
   UpdateOptional(inverted, other.inverted);
   UpdateOptional(idleMode, other.idleMode);
   UpdateOptional(smartCurrentStallLimit, other.smartCurrentStallLimit);
-  UpdateOptional(smartCurrentfreeLimit, other.smartCurrentfreeLimit);
+  UpdateOptional(smartCurrentFreeLimit, other.smartCurrentFreeLimit);
   UpdateOptional(smartCurrentVelocityLimit, other.smartCurrentVelocityLimit);
   UpdateOptional(secondaryCurrentLimit, other.secondaryCurrentLimit);
   UpdateOptional(secondaryCurrentLimitChopCycles, other.secondaryCurrentLimitChopCycles);
