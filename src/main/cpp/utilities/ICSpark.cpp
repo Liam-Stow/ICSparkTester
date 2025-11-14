@@ -12,11 +12,6 @@
 
 ICSpark::ICSpark(rev::spark::SparkBase* spark, rev::spark::SparkRelativeEncoder& inbuiltEncoder)
     : _spark(spark), _encoder(inbuiltEncoder), _simSpark(spark, &_vortexModel) {
-  // Apply the IC default configuration.
-  // Includes setting vel conversion factor to use revs per sec not revs per min and a safeish
-  // current limit.
-  ICSparkConfig defaultConfig;
-  AdjustConfig(defaultConfig);
 }
 
 void ICSpark::InitSendable(wpi::SendableBuilder& builder) {
