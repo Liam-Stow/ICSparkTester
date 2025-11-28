@@ -83,10 +83,6 @@ rev::REVLibError ICSpark::OverwriteConfig(ICSparkConfig& config) {
                    rev::spark::SparkBase::PersistMode::kPersistParameters);
 };
 
-ICSparkConfig ICSpark::GetCachedConfig() const {
-  return _configCache;
-}
-
 void ICSpark::SetPosition(units::turn_t position) {
   _encoder.SetPosition(position.value());
 }
