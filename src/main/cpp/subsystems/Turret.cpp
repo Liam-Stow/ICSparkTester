@@ -8,11 +8,20 @@ Turret::Turret() {
   ICSparkConfig config;
   config.encoder.positionConversionFactor = 1.0 / GEARING;
   config.encoder.velocityConversionFactor = 1.0 / GEARING;
+  config.smartCurrentStallLimit = 100_A;
+  
+  // WPILIb motion profile config in slot 0
   config.closedLoop.slots[0].p = 1;
   config.closedLoop.slots[0].maxMotion.maxVelocity = 30_rpm;
   config.closedLoop.slots[0].maxMotion.maxAcceleration = 500_rev_per_m_per_s;
-  config.smartCurrentStallLimit = 100_A;
   config.closedLoop.slots[0].feedforward.velocity = 0.036_V / 1_rpm;
+  
+  // MAXMotion config in slot 1
+  config.closedLoop.slots[1].p = 1;
+  config.closedLoop.slots[1].maxMotion.maxVelocity = 30_rpm;
+  config.closedLoop.slots[1].maxMotion.maxAcceleration = 500_rev_per_m_per_s;
+  config.closedLoop.slots[1].feedforward.velocity = 0.00_V / 1_rpm;
+  
   _motor.OverwriteConfig(config);
 };
 
@@ -28,19 +37,19 @@ void Turret::SimulationPeriodic() {
 
 frc2::CommandPtr Turret::MaxMotionTo(units::turn_t angle) {
   return RunOnce([this, angle] {
-    _motor.SetMaxMotionTarget(angle);
+    _motor.SetMaxMotionTarget(angle, 0_V, rev::spark::ClosedLoopSlot::kSlot1);
   });
 }
 
 frc2::CommandPtr Turret::WPIProfileTo(units::turn_t angle) {
   return RunOnce([this, angle] {
-    _motor.SetMotionProfileTarget(angle);
+    _motor.SetMotionProfileTarget(angle, 0_V, rev::spark::ClosedLoopSlot::kSlot0);
   });
 }
 
 frc2::CommandPtr Turret::PIDTo(units::turn_t angle) {
   return RunOnce([this, angle] {
-    _motor.SetPositionTarget(angle);
+    _motor.SetPositionTarget(angle, 0_V, rev::spark::ClosedLoopSlot::kSlot0);
   });
 }
 

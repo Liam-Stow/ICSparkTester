@@ -65,14 +65,11 @@ class ICSpark : public wpi::Sendable {
                          rev::spark::ClosedLoopSlot slot = rev::spark::ClosedLoopSlot::kSlot0);
 
   /**
-   * !! Must periodically call UpdateControls() !!
    * Sets a closed loop position target (aka reference or goal) for the motor to drive to using the
    * Spark's MAXMotion control mode. This generates a profiled movement that accelerates and
    * decelerates in a controlled way. This can reduce ware on components, limit current draw and is
    * easier to tune. Also consider using SetMotionProfileTarget() to compute a profile on the
    * RoboRio and perform feedback control based on position.
-   *
-   * Relies on periodic calls to UpdateControls() to update the feedforward model and log targets.
    *
    * @param target The target position drive to.
    *
@@ -302,10 +299,11 @@ class ICSpark : public wpi::Sendable {
    * @param config The desired SPARK configuration
    * @param resetMode Whether to reset safe parameters before setting the configuration
    * @param persistMode Whether to persist the parameters after setting the configuration
-   * @return REVLibError::kOk if successful
+   * @param async Whether to run the configuration asynchronously (without waiting for a response)
+   * @return REVLibError::kOk if successful, async will always return kOk
    */
   rev::REVLibError Configure(ICSparkConfig& config, rev::spark::SparkBase::ResetMode resetMode,
-                             rev::spark::SparkBase::PersistMode persistMode);
+                             rev::spark::SparkBase::PersistMode persistMode, bool async = false);
 
   /**
    * Convenience method for calling
@@ -442,10 +440,7 @@ class ICSpark : public wpi::Sendable {
   ICSparkEncoder _encoder;
   rev::spark::ClosedLoopSlot _activeClosedLoopSlot = rev::spark::kSlot0;
   ICSparkConfig::ClosedLoopSlotConfig& GetActiveSlotConfig();
-
-  // Feedforward gains
   units::volt_t _arbFeedForward = 0.0_V;
-  units::volt_t _latestModelFeedForward = 0.0_V;
 
   // Control References (Targets)
   using MPState = frc::TrapezoidProfile<units::turns>::State;

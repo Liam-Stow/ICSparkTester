@@ -45,7 +45,7 @@ void ICSpark::InitSendable(wpi::SendableBuilder& builder) {
 
 rev::REVLibError ICSpark::Configure(ICSparkConfig& config,
                                     rev::spark::SparkBase::ResetMode resetMode,
-                                    rev::spark::SparkBase::PersistMode persistMode) {
+                                    rev::spark::SparkBase::PersistMode persistMode, bool async) {
   // Update my cached config to match new config.
   if (resetMode == rev::spark::SparkBase::ResetMode::kResetSafeParameters) {
     _configCache = config;
@@ -61,7 +61,11 @@ rev::REVLibError ICSpark::Configure(ICSparkConfig& config,
   // Run the configuration and return any errors
   rev::spark::SparkBaseConfig revConfig;
   _configCache.FillREVConfig(revConfig);
-  return _spark->Configure(revConfig, resetMode, persistMode);
+  if (async) {
+    return _spark->ConfigureAsync(revConfig, resetMode, persistMode);
+  } else {
+    return _spark->Configure(revConfig, resetMode, persistMode);
+  }
 }
 
 rev::REVLibError ICSpark::AdjustConfig(ICSparkConfig& config) {
@@ -93,12 +97,13 @@ void ICSpark::SetPositionTarget(units::turn_t target, units::volt_t arbFeedForwa
   _velocityTarget = units::revolutions_per_minute_t{0};
   _voltageTarget = 0_V;
   _arbFeedForward = arbFeedForward;
-  _latestModelFeedForward = CalculateFeedforward(target, 0_tps);
+  _latestMotionTarget = {0_tr, 0_rpm};
   _controlType = ControlType::kPosition;
   _activeClosedLoopSlot = slot;
 
-  _sparkPidController.SetSetpoint(target.value(), rev::spark::SparkLowLevel::ControlType::kPosition,
-                                  slot, _arbFeedForward.value() + _latestModelFeedForward.value());
+  _sparkPidController.SetSetpoint(
+      target.value(), rev::spark::SparkLowLevel::ControlType::kPosition, slot,
+      _arbFeedForward.value() + CalculateFeedforward(_positionTarget, 0_tps).value());
 }
 
 void ICSpark::SetMaxMotionTarget(units::turn_t target, units::volt_t arbFeedForward,
@@ -107,11 +112,15 @@ void ICSpark::SetMaxMotionTarget(units::turn_t target, units::volt_t arbFeedForw
   _velocityTarget = units::revolutions_per_minute_t{0};
   _voltageTarget = 0_V;
   _arbFeedForward = arbFeedForward;
-  _latestMotionTarget = {GetPosition(), GetVelocity()};
   _controlType = ControlType::kMaxMotion;
   _activeClosedLoopSlot = slot;
+  _latestMotionTarget = {
+      units::turn_t{_sparkPidController.GetMAXMotionSetpointPosition()},
+      units::revolutions_per_minute_t{_sparkPidController.GetMAXMotionSetpointVelocity()}};
 
-  UpdateControls();
+  _sparkPidController.SetSetpoint(_latestMotionTarget.position.value(),
+                                  rev::spark::SparkLowLevel::ControlType::kMAXMotionPositionControl,
+                                  _activeClosedLoopSlot, _arbFeedForward.value());
 }
 
 void ICSpark::SetMotionProfileTarget(units::turn_t target, units::volt_t arbFeedForward,
@@ -133,12 +142,13 @@ void ICSpark::SetVelocityTarget(units::revolutions_per_minute_t target,
   _positionTarget = units::turn_t{0};
   _voltageTarget = 0_V;
   _arbFeedForward = arbFeedForward;
-  _latestModelFeedForward = CalculateFeedforward(0_tr, _velocityTarget);
+  _latestMotionTarget = {0_tr, 0_rpm};
   _controlType = ControlType::kVelocity;
   _activeClosedLoopSlot = slot;
 
-  _sparkPidController.SetSetpoint(target.value(), rev::spark::SparkLowLevel::ControlType::kVelocity,
-                                  slot, _arbFeedForward.value() + _latestModelFeedForward.value());
+  _sparkPidController.SetSetpoint(
+      target.value(), rev::spark::SparkLowLevel::ControlType::kVelocity, slot,
+      _arbFeedForward.value() + CalculateFeedforward(0_tr, _velocityTarget).value());
 }
 
 void ICSpark::SetDutyCycle(double speed) {
@@ -146,7 +156,7 @@ void ICSpark::SetDutyCycle(double speed) {
   _positionTarget = units::turn_t{0};
   _voltageTarget = 0_V;
   _arbFeedForward = 0_V;
-  _latestModelFeedForward = 0_V;
+  _latestMotionTarget = {0_tr, 0_rpm};
   _controlType = ControlType::kDutyCycle;
 
   _sparkPidController.SetSetpoint(speed, rev::spark::SparkLowLevel::ControlType::kDutyCycle);
@@ -157,57 +167,37 @@ void ICSpark::SetVoltage(units::volt_t output) {
   _positionTarget = units::turn_t{0};
   _voltageTarget = output;
   _arbFeedForward = 0_V;
+  _latestMotionTarget = {0_tr, 0_rpm};
   _controlType = ControlType::kVoltage;
 
   _sparkPidController.SetSetpoint(output.value(), rev::spark::SparkLowLevel::ControlType::kVoltage);
 }
 
 void ICSpark::UpdateControls(units::second_t loopTime) {
-  auto prevVelTarget = _latestMotionTarget.velocity;
-  double sparkTarget = 0;
-  auto accelTarget = 0_rev_per_m_per_s;
-
   switch (GetControlType()) {
     case ControlType::kMotionProfile:
       // In motion profile mode, we use the prev target state as the "current state"
       // and the sparkPIDController uses the next target state as its goal.
+      auto prevVelTarget = _latestMotionTarget.velocity;
       _latestMotionTarget = CalcNextMotionTarget(_latestMotionTarget, _positionTarget, loopTime);
-      accelTarget = (_latestMotionTarget.velocity - prevVelTarget) / loopTime;
-      _latestModelFeedForward = CalculateFeedforward(_latestMotionTarget.position,
-                                                     _latestMotionTarget.velocity, accelTarget);
-      sparkTarget = _latestMotionTarget.position.value();
-      break;
+      auto accelTarget = (_latestMotionTarget.velocity - prevVelTarget) / loopTime;
+      auto modelFeedForward = CalculateFeedforward(_latestMotionTarget.position,
+                                                   _latestMotionTarget.velocity, accelTarget);
+      _sparkPidController.SetSetpoint(_latestMotionTarget.position.value(), GetREVControlType(),
+                                      _activeClosedLoopSlot,
+                                      modelFeedForward.value() + _arbFeedForward.value());
+      return;
     case ControlType::kMaxMotion: {
-      // In Max Motion mode, we use the true, sensed state as the "current state"
-      // and the sparkPIDController uses the overall target as its goal.
-      // source: https://github.com/wpilibsuite/2025Beta/discussions/27#discussioncomment-11513251
-      MPState currentState = {GetPosition(), GetVelocity()};
-      _latestMotionTarget = CalcNextMotionTarget(currentState, _positionTarget, loopTime);
-      _latestModelFeedForward = 0_V;  // Max motion takes care of feedforward internally
-      sparkTarget = _positionTarget.value();
-      break;
+      // The built-in spark logic takes care of max motion.
+      // just set the motion target to whatever max moton says for logging, then return.
+      _latestMotionTarget = {
+          units::turn_t{_sparkPidController.GetMAXMotionSetpointPosition()},
+          units::revolutions_per_minute_t{_sparkPidController.GetMAXMotionSetpointVelocity()}};
+      return;
     }
-    case ControlType::kPosition:
-      sparkTarget = _positionTarget.value();
-      _latestMotionTarget = {_positionTarget, 0_rpm};
-      _latestModelFeedForward = CalculateFeedforward(_latestMotionTarget.position,
-                                                     _latestMotionTarget.velocity, accelTarget);
-      prevVelTarget = 0_rpm;
-      break;
-    case ControlType::kVelocity:
-      sparkTarget = _velocityTarget.value();
-      _latestMotionTarget = {0_tr, _velocityTarget};
-      _latestModelFeedForward = CalculateFeedforward(_latestMotionTarget.position,
-                                                     _latestMotionTarget.velocity, accelTarget);
-      prevVelTarget = _velocityTarget;
-      break;
     default:
       return;
   }
-
-  units::volt_t feedforward = _arbFeedForward + _latestModelFeedForward;
-  _sparkPidController.SetSetpoint(sparkTarget, GetREVControlType(), _activeClosedLoopSlot,
-                                  feedforward.value());
 }
 
 units::volt_t ICSpark::CalculateFeedforward(units::turn_t pos, units::revolutions_per_minute_t vel,
