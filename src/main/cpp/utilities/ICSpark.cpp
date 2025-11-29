@@ -115,7 +115,7 @@ void ICSpark::SetMotionProfileTarget(units::turn_t target, units::volt_t arbFeed
   _latestMotionTarget = {GetPosition(), GetVelocity()};
   _controlType = ControlType::kMotionProfile;
 
-  UpdateControls();
+  UpdateMotionProfile();
 }
 
 void ICSpark::SetVelocityTarget(units::revolutions_per_minute_t target,
@@ -154,7 +154,7 @@ void ICSpark::SetVoltage(units::volt_t output) {
   _sparkPidController.SetSetpoint(output.value(), rev::spark::SparkLowLevel::ControlType::kVoltage);
 }
 
-void ICSpark::UpdateControls(units::second_t loopTime) {
+void ICSpark::UpdateMotionProfile(units::second_t loopTime) {
   if (GetControlType() == ControlType::kMotionProfile) {
     // In motion profile mode, we use the prev target state as the "current state"
     // and the sparkPIDController uses the next target state as its goal.

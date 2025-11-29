@@ -89,14 +89,14 @@ class ICSpark : public wpi::Sendable {
                           rev::spark::ClosedLoopSlot slot = rev::spark::ClosedLoopSlot::kSlot0);
 
   /**
-   * !! Must periodically call UpdateControls() !!
+   * !! Must periodically call UpdateMotionProfile() !!
    * Sets a closed loop position target (aka reference or goal) for the motor to drive to using a
    * motion profile computed onboard the RoboRio and followed using the Spark's onboard PID position
    * control. This generates a profiled movement that accelerates and decelerates in a controlled
    * way. This allows model-based feedforward for faster response time, can reduce ware on
    * components, limit current draw and is easier to tune.
    *
-   * Relies on periodic calls to UpdateControls() to update the feedforward model and targets.
+   * Relies on periodic calls to UpdateMotionProfile() to update the feedforward model and targets.
    *
    * @param target The target position drive to.
    *
@@ -131,7 +131,7 @@ class ICSpark : public wpi::Sendable {
    * @param loopTime The frequency at which this is being called. 20ms is the default loop time for
    * WPILib periodic functions.
    */
-  void UpdateControls(units::second_t loopTime = 20_ms);
+  void UpdateMotionProfile(units::second_t loopTime = 20_ms);
 
   /**
    * Calculate how many volts to send to the motor from the confgured feedforward model.

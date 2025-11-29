@@ -13,7 +13,7 @@ Flywheel::Flywheel() {
 };
 
 void Flywheel::Periodic() {
-    _motor.UpdateControls();
+    _motor.UpdateMotionProfile();
 }
 
 void Flywheel::SimulationPeriodic() {

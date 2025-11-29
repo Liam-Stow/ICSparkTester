@@ -18,7 +18,7 @@ Elevator::Elevator() {
 };
 
 void Elevator::Periodic() {
-    _motor.UpdateControls();
+    _motor.UpdateMotionProfile();
 }
 
 void Elevator::SimulationPeriodic() {
