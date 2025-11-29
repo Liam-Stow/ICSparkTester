@@ -1,13 +1,14 @@
 #include "subsystems/Flywheel.h"
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <rev/config/SparkBaseConfig.h>
 
 Flywheel::Flywheel() {
     frc::SmartDashboard::PutData("Flywheel", &_motor);
     
-    ICSparkConfig config;
-    config.smartCurrentStallLimit = 200_A;
-    config.closedLoop.slots[0].p = 0.1;
-    config.closedLoop.slots[0].feedforward.velocity = 0.0018_V / 1_rpm;
+    rev::spark::SparkBaseConfig config;
+    config.SmartCurrentLimit(200); // amps
+    config.closedLoop.P(0.1);
+    config.closedLoop.feedForward.kV(0.0018); // V per rpm
     _motor.OverwriteConfig(config);
 };
 

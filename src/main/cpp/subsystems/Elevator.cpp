@@ -1,18 +1,19 @@
 #include "subsystems/Elevator.h"
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <rev/config/SparkBaseConfig.h>
 
 Elevator::Elevator() {
     frc::SmartDashboard::PutData("Elevator", &_motor);
 
-    ICSparkConfig config;
-    config.encoder.positionConversionFactor = 1.0 / GEARING;
-    config.encoder.velocityConversionFactor = 1.0 / GEARING;
-    config.closedLoop.slots[0].p = 1;
-    config.closedLoop.slots[0].maxMotion.maxVelocity = 500_rpm;
-    config.closedLoop.slots[0].maxMotion.maxAcceleration = 500_rev_per_m_per_s;
-    config.smartCurrentStallLimit = 100_A;
-    config.closedLoop.slots[0].feedforward.linearGravity = 0.16_V;
-    config.closedLoop.slots[0].feedforward.velocity = 0.02_V / 1_rpm;
+    rev::spark::SparkBaseConfig config;
+    config.SmartCurrentLimit(100); // amps
+    config.encoder.PositionConversionFactor(1.0 / GEARING);
+    config.encoder.VelocityConversionFactor(1.0 / GEARING);
+    config.closedLoop.P(1.0);
+    config.closedLoop.maxMotion.CruiseVelocity(500); // rpm
+    config.closedLoop.maxMotion.MaxAcceleration(500); // rev/s^2
+    config.closedLoop.feedForward.kCos(0.16); // V
+    config.closedLoop.feedForward.kV(0.02); // V per rpm
     _motor.OverwriteConfig(config);
 };
 

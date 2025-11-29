@@ -1,27 +1,28 @@
 #include "subsystems/Turret.h"
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <units/angular_acceleration.h>
+#include <rev/config/SparkBaseConfig.h>
 
 Turret::Turret() {
   frc::SmartDashboard::PutData("Turret", &_motor);
 
-  ICSparkConfig config;
-  config.encoder.positionConversionFactor = 1.0 / GEARING;
-  config.encoder.velocityConversionFactor = 1.0 / GEARING;
-  config.smartCurrentStallLimit = 100_A;
+  rev::spark::SparkBaseConfig config;
+  config.SmartCurrentLimit(100); // amps
+  config.encoder.PositionConversionFactor(1.0 / GEARING);
+  config.encoder.VelocityConversionFactor(1.0 / GEARING);
   
   // WPILIb motion profile config in slot 0
-  config.closedLoop.slots[0].p = 1;
-  config.closedLoop.slots[0].maxMotion.maxVelocity = 30_rpm;
-  config.closedLoop.slots[0].maxMotion.maxAcceleration = 500_rev_per_m_per_s;
-  config.closedLoop.slots[0].feedforward.velocity = 0.036_V / 1_rpm;
+  config.closedLoop.P(1.0, rev::spark::ClosedLoopSlot::kSlot0);
+  config.closedLoop.maxMotion.CruiseVelocity(30, rev::spark::ClosedLoopSlot::kSlot0);
+  config.closedLoop.maxMotion.MaxAcceleration(500, rev::spark::ClosedLoopSlot::kSlot0);
+  config.closedLoop.feedForward.kV(0.036, rev::spark::ClosedLoopSlot::kSlot0);
   
   // MAXMotion config in slot 1
-  config.closedLoop.slots[1].p = 1;
-  config.closedLoop.slots[1].maxMotion.maxVelocity = 30_rpm;
-  config.closedLoop.slots[1].maxMotion.maxAcceleration = 500_rev_per_m_per_s;
-  config.closedLoop.slots[1].feedforward.velocity = 0.00_V / 1_rpm;
-  
+  config.closedLoop.P(1.0, rev::spark::ClosedLoopSlot::kSlot1);
+  config.closedLoop.maxMotion.CruiseVelocity(30, rev::spark::ClosedLoopSlot::kSlot1);
+  config.closedLoop.maxMotion.MaxAcceleration(500, rev::spark::ClosedLoopSlot::kSlot1);
+  config.closedLoop.feedForward.kV(0.0, rev::spark::ClosedLoopSlot::kSlot1);
+
   _motor.OverwriteConfig(config);
 };
 

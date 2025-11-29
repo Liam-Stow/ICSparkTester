@@ -1,23 +1,21 @@
 #include "subsystems/Arm.h"
 #include <frc/smartdashboard/SmartDashboard.h>
-#include "utilities/ICSparkConfig.h"
+#include <rev/config/SparkBaseConfig.h>
 
 Arm::Arm() {
   frc::SmartDashboard::PutData("Arm", &_motor);
 
-  ICSparkConfig config;
-  config.encoder.positionConversionFactor = 1.0 / GEARING;
-  config.encoder.velocityConversionFactor = 1.0 / GEARING;
-  config.closedLoop.slots[0].p = 2.0;
-  config.closedLoop.slots[0].maxMotion.maxVelocity = 300_rpm;
-  config.closedLoop.slots[0].maxMotion.maxAcceleration = 100_rev_per_m_per_s;
-  config.smartCurrentStallLimit = 100_A;
-  config.closedLoop.slots[0].feedforward.rotationalGravity = 0.07_V;
-  config.closedLoop.slots[0].feedforward.velocity = 0.06_V / 1_rpm;
-  config.closedLoop.slots[0].feedforward.acceleration = 0.005_V / 1_rev_per_m_per_s;
+  rev::spark::SparkBaseConfig config;
+  config.SmartCurrentLimit(100); // amps
+  config.encoder.PositionConversionFactor(1.0 / GEARING);
+  config.encoder.VelocityConversionFactor(1.0 / GEARING);
+  config.closedLoop.P(2.0);
+  config.closedLoop.maxMotion.CruiseVelocity(300); // rpm
+  config.closedLoop.maxMotion.MaxAcceleration(100); // rev/s^2
+  config.closedLoop.feedForward.kCos(0.07); // V
+  config.closedLoop.feedForward.kV(0.06); // V per rpm
+  config.closedLoop.feedForward.kA(0.005); // V per rev/s^2
   _motor.OverwriteConfig(config);
-
-  _motor.SetPosition(STARTING_ANGLE);
 };
 
 void Arm::Periodic() {

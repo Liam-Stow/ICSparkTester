@@ -1,11 +1,12 @@
 #include "subsystems/Feeder.h"
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <rev/config/SparkBaseConfig.h>
 
 Feeder::Feeder() {
     frc::SmartDashboard::PutData("Feeder", &_motor);
     
-    ICSparkConfig config;
-    config.smartCurrentStallLimit = 100_A;
+    rev::spark::SparkBaseConfig config;
+    config.SmartCurrentLimit(100); // amps
     _motor.OverwriteConfig(config);
 };
 

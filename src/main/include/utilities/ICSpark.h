@@ -2,6 +2,7 @@
 
 #include <rev/SparkBase.h>
 #include <rev/SparkSim.h>
+#include <rev/config/SparkBaseConfigAccessor.h>
 #include <frc/controller/PIDController.h>
 #include <frc/trajectory/TrapezoidProfile.h>
 #include <units/acceleration.h>
@@ -15,7 +16,6 @@
 #include <wpi/sendable/Sendable.h>
 #include <wpi/sendable/SendableBuilder.h>
 #include "utilities/ICSparkEncoder.h"
-#include "utilities/ICSparkConfig.h"
 
 /**
  * Wrapper around the Rev CANSparkBase class with some convenience features.
@@ -35,13 +35,19 @@ class ICSpark : public wpi::Sendable {
     kMotionProfile = 10
   };
 
+  using VoltsPerRpm = units::unit_t<
+      units::compound_unit<units::volts, units::inverse<units::revolutions_per_minute>>>;
+  using VoltsPerRpmPerS = units::unit_t<
+      units::compound_unit<units::volts, units::inverse<units::revolutions_per_minute_per_second>>>;
+
   /**
    * Create a new object to control a SPARK motor controller.
    *
    * @param spark Reference to the spark to control
    * @param inbultEncoder The encoder built into the NEO
    */
-  ICSpark(rev::spark::SparkBase* spark, rev::spark::SparkRelativeEncoder& inbuiltEncoder);
+  ICSpark(rev::spark::SparkBase* spark, rev::spark::SparkRelativeEncoder& inbuiltEncoder,
+          rev::spark::SparkBaseConfigAccessor& configAccessor);
 
   /**
    * Sets position of motor
@@ -249,23 +255,6 @@ class ICSpark : public wpi::Sendable {
   void SetVoltage(units::volt_t output);
 
   /**
-   * Switch to using an external absolute encoder connected to the data port on
-   * the SPARK for all encoder calls.
-   *
-   * This doesn't affect the built in feedback control on its own. To setup feedback control,
-   * apply the config that is returned by this function.
-   *
-   * To use a relative encoder, check the Spark Max and Spark Flex
-   * specific implimentation. The Max uses "Alternate encoders" while the Flex
-   * uses "External encoders"
-   *
-   * @param zeroOffset the position that is reported as zero. It is influenced
-   * by the absolute encoder's position conversion factor, and whether it is
-   * inverted. So set those parameters before calling this.
-   */
-  [[nodiscard]] ICSparkConfig UseAbsoluteEncoder(units::turn_t zeroOffset = 0_tr);
-
-  /**
    * Check whether the motor is on its position target, within a given tolerance.
    *
    * @param tolerance The tolerance to be considered on target
@@ -284,8 +273,7 @@ class ICSpark : public wpi::Sendable {
   /**
    * Set the configuration for the SPARK.
    * When configuring the conversion factors, the ICSpark assumes you are converting position into
-   * rotations and velocity into turns per second. Make sure to check whether your velocity
-   * coversion factor needs to be divided by 60 to transform RPM into tps!
+   * rotations and velocity into RPM.
    *
    * If @c resetMode is ResetMode::kResetSafeParameters, this method will reset safe writable
    * parameters to their default values before setting the given configuration. The following
@@ -302,26 +290,26 @@ class ICSpark : public wpi::Sendable {
    * @param async Whether to run the configuration asynchronously (without waiting for a response)
    * @return REVLibError::kOk if successful, async will always return kOk
    */
-  rev::REVLibError Configure(ICSparkConfig& config, rev::spark::SparkBase::ResetMode resetMode,
+  rev::REVLibError Configure(rev::spark::SparkBaseConfig& config, rev::spark::SparkBase::ResetMode resetMode,
                              rev::spark::SparkBase::PersistMode persistMode, bool async = false);
 
   /**
    * Convenience method for calling
    * Configure(config, ResetMode::kNoResetSafeParameters, PersistMode::kPersistParameters)
    */
-  rev::REVLibError AdjustConfig(ICSparkConfig& config);
+  rev::REVLibError AdjustConfig(rev::spark::SparkBaseConfig& config);
 
   /**
    * Convenience method for calling
    * Configure(config, ResetMode::kNoResetSafeParameters, PersistMode::kNoPersistParameters)
    */
-  rev::REVLibError AdjustConfigNoPersist(ICSparkConfig& config);
+  rev::REVLibError AdjustConfigNoPersist(rev::spark::SparkBaseConfig& config);
 
   /**
    * Convenience method for calling
    * Configure(config, ResetMode::kResetSafeParameters, PersistMode::kPersistParameters)
    */
-  rev::REVLibError OverwriteConfig(ICSparkConfig& config);
+  rev::REVLibError OverwriteConfig(rev::spark::SparkBaseConfig& config);
 
   // Sendable setup, called automatically when this is passed into smartDashbaord::PutData()
   void InitSendable(wpi::SendableBuilder& builder) override;
@@ -334,6 +322,12 @@ class ICSpark : public wpi::Sendable {
   }
 
  private:
+
+  /**
+   * Refresh internal config cache to match the SPARK's current configuration.
+   */
+  void RefreshConfigCache();
+
   /**
    * Configure the maximum velocity constraint for motion profiles. This includes the on-controller
    * MAX Motion mode and the on-rio motion profiles.
@@ -341,7 +335,7 @@ class ICSpark : public wpi::Sendable {
    *
    * @param maxVelocity The maxmimum velocity for the motion profile.
    */
-  void SetMotionMaxVel(units::revolutions_per_minute_t maxVelocity);
+  void TuneMotionMaxVel(units::revolutions_per_minute_t maxVelocity);
 
   /**
    * Configure the maximum acceleration constraint for motion profiles. This includes the
@@ -350,7 +344,7 @@ class ICSpark : public wpi::Sendable {
    *
    * @param maxAcceleration The maxmimum acceleration for the motion profile.
    */
-  void SetMotionMaxAccel(units::revolutions_per_minute_per_second_t maxAcceleration);
+  void TuneMotionMaxAccel(units::revolutions_per_minute_per_second_t maxAcceleration);
 
   /**
    * Set the Proportional gain for PID feedback control. This uses the Set Parameter API and should
@@ -405,14 +399,14 @@ class ICSpark : public wpi::Sendable {
    *
    * @param V Voltage to travel at a desired velocity.
    */
-  void TuneFeedforwardVelocity(ICSparkConfig::VoltsPerRpm V);
+  void TuneFeedforwardVelocity(VoltsPerRpm V);
 
   /**
    * Set the Acceleration gain constant of the feed forward model.
    *
    * @param A Voltage to travel at a desired acceleration.
    */
-  void TuneFeedforwardAcceleration(ICSparkConfig::VoltsPerRpmPerS A);
+  void TuneFeedforwardAcceleration(VoltsPerRpmPerS A);
 
   /**
    * This sets the ratio that is used to calculate the absolute position of
@@ -426,13 +420,25 @@ class ICSpark : public wpi::Sendable {
   void TuneFeedforwardCosineRatio(double ratio);
 
   rev::spark::SparkBase* _spark;
-  ICSparkConfig _configCache;
+  rev::spark::SparkBaseConfigAccessor& _configAccessor;
+  struct ConfigCache {
+    double feedbackP = 0.0;
+    double feedbackI = 0.0;
+    double feedbackD = 0.0;
+    units::volt_t feedforwardStaticFriction = 0_V;
+    units::volt_t feedforwardLinearGravity = 0_V;
+    units::volt_t feedforwardRotationalGravity = 0_V;
+    VoltsPerRpm feedforwardVelocity = 0_V/1_rpm;
+    VoltsPerRpmPerS feedforwardAcceleration = 0_V/1_rev_per_m_per_s;
+    double feedforwardCosineRatio = 0.0;
+    units::revolutions_per_minute_t motionMaxVelocity = 0_rpm;
+    units::revolutions_per_minute_per_second_t motionMaxAcceleration = 0_rev_per_m_per_s;
+  } _configCache;
 
   // Feedback control objects
   rev::spark::SparkClosedLoopController _sparkPidController{_spark->GetClosedLoopController()};
   ICSparkEncoder _encoder;
   rev::spark::ClosedLoopSlot _activeClosedLoopSlot = rev::spark::kSlot0;
-  ICSparkConfig::ClosedLoopSlotConfig& GetActiveSlotConfig();
   units::volt_t _arbFeedForward = 0.0_V;
 
   // Control References (Targets)

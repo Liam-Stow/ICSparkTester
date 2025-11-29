@@ -65,16 +65,7 @@ TEST_F(ArmTest, pid) {
   auto cmd = arm.PIDTo(target);
   cmd.Schedule();
 
-  auto duration = 0.5_s;
-  int loops = (duration.value() * 1000) / 20;
-  for (int i = 0; i <= loops; i++) {
-    frc2::CommandScheduler::GetInstance().Run();
-    std::cout << "Arm Position: " << arm.GetPosition().value() << " turns\n";
-    std::cout << "Arm Velocity: " << arm.GetVelocity().value() << " turns/sec\n";
-    std::cout << "Arm Duty Cycle: " << arm.GetMotorDutyCycle() << "\n";
-    std::cout << "-------------------------\n";
-  }
-
+  SimCmdScheduler(0.5_s);
   EXPECT_NEAR(target.value(), arm.GetPosition().value(), 0.005);
 }
 

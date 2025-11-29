@@ -2,7 +2,7 @@
 
 ICSparkFlex::ICSparkFlex(int deviceID)
     : SparkFlex(deviceID, rev::spark::SparkLowLevel::MotorType::kBrushless),
-      ICSpark(this, GetEncoder()) {}
+      ICSpark(this, GetEncoder(), this->configAccessor) {}
 
 void ICSparkFlex::Set(double speed) { ICSpark::SetDutyCycle(speed); }
 
