@@ -444,7 +444,6 @@ class ICSpark : public wpi::Sendable {
   using MPState = frc::TrapezoidProfile<units::turns>::State;
   units::turn_t _positionTarget{0};
   units::revolutions_per_minute_t _velocityTarget{0};
-  units::volt_t _voltageTarget{0};
   frc::TrapezoidProfile<units::turns> _motionProfile{{0_rpm, 0_rev_per_m_per_s}};
   MPState CalcNextMotionTarget(MPState current, units::turn_t goalPosition,
                                units::second_t lookahead = 20_ms);
