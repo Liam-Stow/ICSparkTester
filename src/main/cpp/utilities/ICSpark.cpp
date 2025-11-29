@@ -30,7 +30,7 @@ void ICSpark::InitSendable(wpi::SendableBuilder& builder) {
   builder.AddDoubleProperty("Velocity Target",            [&] { return _velocityTarget.value(); },                                                        [&](double targ) { SetVelocityTarget(targ*1_tps); });
   builder.AddDoubleProperty("Profile Position Target",    [&] { return _latestMotionTarget.position.value(); },                                           [&](double targ) { SetMotionProfileTarget(targ*1_tr); });
   builder.AddDoubleProperty("Profile Velocity Target",    [&] { return _latestMotionTarget.velocity.convert<units::revolutions_per_minute>().value(); },  nullptr);
-  builder.AddDoubleProperty("Gains/Active Slot",          [&] { return _activeClosedLoopSlot; },                                                          nullptr);
+  builder.AddDoubleProperty("Gains/Active Slot",          [&] { return _sparkPidController.GetSelectedSlot(); },                                          nullptr);
   builder.AddDoubleProperty("Gains/FB P Gain",            [&] { return _configCache.feedbackP; },                                                         [&](double P) { TuneFeedbackProportional(P); });
   builder.AddDoubleProperty("Gains/FB I Gain",            [&] { return _configCache.feedbackI; },                                                         [&](double I) { TuneFeedbackIntegral(I); });
   builder.AddDoubleProperty("Gains/FB D Gain",            [&] { return _configCache.feedbackD; },                                                         [&](double D) { TuneFeedbackDerivative(D); });
@@ -84,7 +84,6 @@ void ICSpark::SetPositionTarget(units::turn_t target, units::volt_t arbFeedForwa
   _arbFeedForward = arbFeedForward;
   _latestMotionTarget = {0_tr, 0_rpm};
   _controlType = ControlType::kPosition;
-  _activeClosedLoopSlot = slot;
 
   _sparkPidController.SetSetpoint(
       target.value(), rev::spark::SparkLowLevel::ControlType::kPosition, slot,
@@ -98,14 +97,13 @@ void ICSpark::SetMaxMotionTarget(units::turn_t target, units::volt_t arbFeedForw
   _voltageTarget = 0_V;
   _arbFeedForward = arbFeedForward;
   _controlType = ControlType::kMaxMotion;
-  _activeClosedLoopSlot = slot;
   _latestMotionTarget = {
       units::turn_t{_sparkPidController.GetMAXMotionSetpointPosition()},
       units::revolutions_per_minute_t{_sparkPidController.GetMAXMotionSetpointVelocity()}};
 
   _sparkPidController.SetSetpoint(_latestMotionTarget.position.value(),
                                   rev::spark::SparkLowLevel::ControlType::kMAXMotionPositionControl,
-                                  _activeClosedLoopSlot, _arbFeedForward.value());
+                                  slot, _arbFeedForward.value());
 }
 
 void ICSpark::SetMotionProfileTarget(units::turn_t target, units::volt_t arbFeedForward,
@@ -116,7 +114,6 @@ void ICSpark::SetMotionProfileTarget(units::turn_t target, units::volt_t arbFeed
   _arbFeedForward = arbFeedForward;
   _latestMotionTarget = {GetPosition(), GetVelocity()};
   _controlType = ControlType::kMotionProfile;
-  _activeClosedLoopSlot = slot;
 
   UpdateControls();
 }
@@ -129,7 +126,6 @@ void ICSpark::SetVelocityTarget(units::revolutions_per_minute_t target,
   _arbFeedForward = arbFeedForward;
   _latestMotionTarget = {0_tr, 0_rpm};
   _controlType = ControlType::kVelocity;
-  _activeClosedLoopSlot = slot;
 
   _sparkPidController.SetSetpoint(
       target.value(), rev::spark::SparkLowLevel::ControlType::kVelocity, slot,
@@ -169,7 +165,7 @@ void ICSpark::UpdateControls(units::second_t loopTime) {
     auto modelFeedForward = CalculateFeedforward(_latestMotionTarget.position,
                                                  _latestMotionTarget.velocity, accelTarget);
     _sparkPidController.SetSetpoint(_latestMotionTarget.position.value(), GetREVControlType(),
-                                    _activeClosedLoopSlot,
+                                    _sparkPidController.GetSelectedSlot(),
                                     modelFeedForward.value() + _arbFeedForward.value());
   } else if (GetControlType() == ControlType::kMaxMotion) {
     // The built-in spark logic takes care of max motion.
@@ -202,90 +198,97 @@ rev::spark::SparkLowLevel::ControlType ICSpark::GetREVControlType() {
 
 void ICSpark::TuneMotionMaxVel(units::revolutions_per_minute_t maxVelocity) {
   rev::spark::SparkBaseConfig config;
-  config.closedLoop.maxMotion.MaxVelocity(maxVelocity.value(), _activeClosedLoopSlot);
+  config.closedLoop.maxMotion.MaxVelocity(maxVelocity.value(),
+                                          _sparkPidController.GetSelectedSlot());
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneMotionMaxAccel(units::revolutions_per_minute_per_second_t maxAcceleration) {
   rev::spark::SparkBaseConfig config;
-  config.closedLoop.maxMotion.MaxAcceleration(maxAcceleration.value(), _activeClosedLoopSlot);
+  config.closedLoop.maxMotion.MaxAcceleration(maxAcceleration.value(),
+                                              _sparkPidController.GetSelectedSlot());
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedbackProportional(double P) {
   rev::spark::SparkBaseConfig config;
-  config.closedLoop.P(P, _activeClosedLoopSlot);
+  config.closedLoop.P(P, _sparkPidController.GetSelectedSlot());
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedbackIntegral(double I) {
   rev::spark::SparkBaseConfig config;
-  config.closedLoop.I(I, _activeClosedLoopSlot);
+  config.closedLoop.I(I, _sparkPidController.GetSelectedSlot());
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedbackDerivative(double D) {
   rev::spark::SparkBaseConfig config;
-  config.closedLoop.D(D, _activeClosedLoopSlot);
+  config.closedLoop.D(D, _sparkPidController.GetSelectedSlot());
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedforwardStaticFriction(units::volt_t S) {
   rev::spark::SparkBaseConfig config;
-  config.closedLoop.feedForward.kS(S.value(), _activeClosedLoopSlot);
+  config.closedLoop.feedForward.kS(S.value(), _sparkPidController.GetSelectedSlot());
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedforwardLinearGravity(units::volt_t linearG) {
   rev::spark::SparkBaseConfig config;
-  config.closedLoop.feedForward.kG(linearG.value(), _activeClosedLoopSlot);
+  config.closedLoop.feedForward.kG(linearG.value(), _sparkPidController.GetSelectedSlot());
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedforwardRotationalGravity(units::volt_t rotationalG) {
   rev::spark::SparkBaseConfig config;
-  config.closedLoop.feedForward.kCos(rotationalG.value(), _activeClosedLoopSlot);
+  config.closedLoop.feedForward.kCos(rotationalG.value(), _sparkPidController.GetSelectedSlot());
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedforwardVelocity(VoltsPerRpm V) {
   rev::spark::SparkBaseConfig config;
-  config.closedLoop.feedForward.kV(V.value(), _activeClosedLoopSlot);
+  config.closedLoop.feedForward.kV(V.value(), _sparkPidController.GetSelectedSlot());
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedforwardAcceleration(VoltsPerRpmPerS A) {
   rev::spark::SparkBaseConfig config;
-  config.closedLoop.feedForward.kA(A.value(), _activeClosedLoopSlot);
+  config.closedLoop.feedForward.kA(A.value(), _sparkPidController.GetSelectedSlot());
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::TuneFeedforwardCosineRatio(double ratio) {
   rev::spark::SparkBaseConfig config;
-  config.closedLoop.feedForward.kCosRatio(ratio, _activeClosedLoopSlot);
+  config.closedLoop.feedForward.kCosRatio(ratio, _sparkPidController.GetSelectedSlot());
   AdjustConfigNoPersist(config);
 }
 
 void ICSpark::RefreshConfigCache() {
-  _configCache.feedbackP = _configAccessor.closedLoop.GetP(_activeClosedLoopSlot);
-  _configCache.feedbackI = _configAccessor.closedLoop.GetI(_activeClosedLoopSlot);
-  _configCache.feedbackD = _configAccessor.closedLoop.GetD(_activeClosedLoopSlot);
-  _configCache.feedforwardStaticFriction =
-      units::volt_t{_configAccessor.closedLoop.feedForward.getkS(_activeClosedLoopSlot)};
-  _configCache.feedforwardLinearGravity =
-      units::volt_t{_configAccessor.closedLoop.feedForward.getkG(_activeClosedLoopSlot)};
-  _configCache.feedforwardRotationalGravity =
-      units::volt_t{_configAccessor.closedLoop.feedForward.getkCos(_activeClosedLoopSlot)};
-  _configCache.feedforwardVelocity =
-      VoltsPerRpm{_configAccessor.closedLoop.feedForward.getkV(_activeClosedLoopSlot)};
-  _configCache.feedforwardAcceleration =
-      VoltsPerRpmPerS{_configAccessor.closedLoop.feedForward.getkA(_activeClosedLoopSlot)};
+  _configCache.feedbackP = _configAccessor.closedLoop.GetP(_sparkPidController.GetSelectedSlot());
+  _configCache.feedbackI = _configAccessor.closedLoop.GetI(_sparkPidController.GetSelectedSlot());
+  _configCache.feedbackD = _configAccessor.closedLoop.GetD(_sparkPidController.GetSelectedSlot());
+  _configCache.feedforwardStaticFriction = units::volt_t{
+      _configAccessor.closedLoop.feedForward.getkS(_sparkPidController.GetSelectedSlot())};
+  _configCache.feedforwardLinearGravity = units::volt_t{
+      _configAccessor.closedLoop.feedForward.getkG(_sparkPidController.GetSelectedSlot())};
+  _configCache.feedforwardRotationalGravity = units::volt_t{
+      _configAccessor.closedLoop.feedForward.getkCos(_sparkPidController.GetSelectedSlot())};
+  _configCache.feedforwardVelocity = VoltsPerRpm{
+      _configAccessor.closedLoop.feedForward.getkV(_sparkPidController.GetSelectedSlot())};
+  _configCache.feedforwardAcceleration = VoltsPerRpmPerS{
+      _configAccessor.closedLoop.feedForward.getkA(_sparkPidController.GetSelectedSlot())};
   _configCache.feedforwardCosineRatio =
-      _configAccessor.closedLoop.feedForward.getkCosRatio(_activeClosedLoopSlot);
+      _configAccessor.closedLoop.feedForward.getkCosRatio(_sparkPidController.GetSelectedSlot());
   _configCache.motionMaxVelocity = units::revolutions_per_minute_t{
-      _configAccessor.closedLoop.maxMotion.GetMaxVelocity(_activeClosedLoopSlot)};
+      _configAccessor.closedLoop.maxMotion.GetMaxVelocity(_sparkPidController.GetSelectedSlot())};
   _configCache.motionMaxAcceleration = units::revolutions_per_minute_per_second_t{
-      _configAccessor.closedLoop.maxMotion.GetMaxAcceleration(_activeClosedLoopSlot)};
+      _configAccessor.closedLoop.maxMotion.GetMaxAcceleration(
+          _sparkPidController.GetSelectedSlot())};
+
+  // Update motion profile constraints
+  _motionProfile = frc::TrapezoidProfile<units::turns>(
+      {_configCache.motionMaxVelocity, _configCache.motionMaxAcceleration});
 }
 
 units::revolutions_per_minute_t ICSpark::GetVelocity() {

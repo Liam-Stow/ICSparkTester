@@ -438,7 +438,6 @@ class ICSpark : public wpi::Sendable {
   // Feedback control objects
   rev::spark::SparkClosedLoopController _sparkPidController{_spark->GetClosedLoopController()};
   ICSparkEncoder _encoder;
-  rev::spark::ClosedLoopSlot _activeClosedLoopSlot = rev::spark::kSlot0;
   units::volt_t _arbFeedForward = 0.0_V;
 
   // Control References (Targets)

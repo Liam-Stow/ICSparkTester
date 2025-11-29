@@ -2,8 +2,7 @@
 
 #include <frc2/command/CommandScheduler.h>
 
-Robot::Robot() {
-}
+Robot::Robot() {}
 
 void Robot::RobotPeriodic() {
   frc2::CommandScheduler::GetInstance().Run();
@@ -26,6 +25,8 @@ void Robot::TeleopInit() {}
 void Robot::TeleopPeriodic() {}
 
 void Robot::TeleopExit() {}
+
+void Robot::SimulationPeriodic() {}
 
 void Robot::TestInit() {
   frc2::CommandScheduler::GetInstance().CancelAll();
