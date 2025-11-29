@@ -170,29 +170,23 @@ void ICSpark::SetVoltage(units::volt_t output) {
 }
 
 void ICSpark::UpdateControls(units::second_t loopTime) {
-  switch (GetControlType()) {
-    case ControlType::kMotionProfile:
-      // In motion profile mode, we use the prev target state as the "current state"
-      // and the sparkPIDController uses the next target state as its goal.
-      auto prevVelTarget = _latestMotionTarget.velocity;
-      _latestMotionTarget = CalcNextMotionTarget(_latestMotionTarget, _positionTarget, loopTime);
-      auto accelTarget = (_latestMotionTarget.velocity - prevVelTarget) / loopTime;
-      auto modelFeedForward = CalculateFeedforward(_latestMotionTarget.position,
-                                                   _latestMotionTarget.velocity, accelTarget);
-      _sparkPidController.SetSetpoint(_latestMotionTarget.position.value(), GetREVControlType(),
-                                      _activeClosedLoopSlot,
-                                      modelFeedForward.value() + _arbFeedForward.value());
-      return;
-    case ControlType::kMaxMotion: {
-      // The built-in spark logic takes care of max motion.
-      // just set the motion target to whatever max moton says for logging, then return.
-      _latestMotionTarget = {
-          units::turn_t{_sparkPidController.GetMAXMotionSetpointPosition()},
-          units::revolutions_per_minute_t{_sparkPidController.GetMAXMotionSetpointVelocity()}};
-      return;
-    }
-    default:
-      return;
+  if (GetControlType() == ControlType::kMotionProfile) {
+    // In motion profile mode, we use the prev target state as the "current state"
+    // and the sparkPIDController uses the next target state as its goal.
+    auto prevVelTarget = _latestMotionTarget.velocity;
+    _latestMotionTarget = CalcNextMotionTarget(_latestMotionTarget, _positionTarget, loopTime);
+    auto accelTarget = (_latestMotionTarget.velocity - prevVelTarget) / loopTime;
+    auto modelFeedForward = CalculateFeedforward(_latestMotionTarget.position,
+                                                  _latestMotionTarget.velocity, accelTarget);
+    _sparkPidController.SetSetpoint(_latestMotionTarget.position.value(), GetREVControlType(),
+                                    _activeClosedLoopSlot,
+                                    modelFeedForward.value() + _arbFeedForward.value());
+  } else if (GetControlType() == ControlType::kMaxMotion){
+    // The built-in spark logic takes care of max motion.
+    // just set the motion target to whatever max moton says for logging.
+    _latestMotionTarget = {
+        units::turn_t{_sparkPidController.GetMAXMotionSetpointPosition()},
+        units::revolutions_per_minute_t{_sparkPidController.GetMAXMotionSetpointVelocity()}};
   }
 }
 
@@ -301,6 +295,13 @@ units::revolutions_per_minute_t ICSpark::GetVelocity() {
   return units::revolutions_per_minute_t{_encoder.GetVelocity()};
 }
 
+units::turn_t ICSpark::GetPosition() {
+  if constexpr (frc::RobotBase::IsSimulation()) {
+    return units::turn_t{_simSpark.GetPosition()};
+  }
+  return units::turn_t{_encoder.GetPosition()};
+}
+
 double ICSpark::GetDutyCycle() const {
   if constexpr (frc::RobotBase::IsSimulation()) {
     return _simSpark.GetAppliedOutput();
@@ -334,7 +335,7 @@ void ICSpark::IterateSim(units::revolutions_per_minute_t velocity,
   // REV's spark sim can work without explicitly telling it the positon of the mechanism,
   // but we find that it falls out of sync with the physics model if we don't set it.
   if (position.has_value()) {
-    _simSpark.SetPosition(position.value().value());
+    _simSpark.SetPosition(position->value());
   }
 }
 

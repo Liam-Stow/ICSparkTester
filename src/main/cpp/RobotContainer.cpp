@@ -35,7 +35,3 @@ void RobotContainer::ConfigureBindings() {
   _turretController.Y().OnTrue(_turret.DriveWithDutyCycle(-1));
 
 }
-
-frc2::CommandPtr RobotContainer::GetAutonomousCommand() {
-  return frc2::cmd::Print("No autonomous command configured");
-}

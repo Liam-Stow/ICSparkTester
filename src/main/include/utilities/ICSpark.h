@@ -212,7 +212,7 @@ class ICSpark : public wpi::Sendable {
   /**
    * Get the position of the motor.
    */
-  units::turn_t GetPosition() { return units::turn_t{_encoder.GetPosition()}; };
+  units::turn_t GetPosition();
 
   /**
    * Get the duty cycle (-1 to 1) of the motor.
