@@ -19,28 +19,28 @@ ICSpark::ICSpark(rev::spark::SparkBase* spark, rev::spark::SparkRelativeEncoder&
 
 void ICSpark::InitSendable(wpi::SendableBuilder& builder) {
   // clang-format off
-  //----------------------- Label ------------------------ Getter ---------------------------------------------------------------------------------------- Setter -------------------------------------------------
-  builder.AddDoubleProperty("Position",                   [&] { return GetPosition().value(); },                                                          nullptr);
-  builder.AddDoubleProperty("Velocity",                   [&] { return GetVelocity().value(); },                                                          nullptr);
-  builder.AddDoubleProperty("Duty Cycle",                 [&] { return GetDutyCycle(); },                                                                 nullptr);
-  builder.AddDoubleProperty("Voltage",                    [&] { return GetMotorVoltage().value(); },                                                      nullptr);
-  builder.AddDoubleProperty("Current",                    [&] { return GetStatorCurrent().value(); },                                                     nullptr);
-  builder.AddDoubleProperty("Temperature",                [&] { return _spark->GetMotorTemperature(); },                                                  nullptr);
-  builder.AddDoubleProperty("Position Target",            [&] { return _positionTarget.value(); },                                                        [&](double targ) { SetPositionTarget(targ*1_tr); });
-  builder.AddDoubleProperty("Velocity Target",            [&] { return _velocityTarget.value(); },                                                        [&](double targ) { SetVelocityTarget(targ*1_tps); });
-  builder.AddDoubleProperty("Profile Position Target",    [&] { return _latestMotionTarget.position.value(); },                                           [&](double targ) { SetMotionProfileTarget(targ*1_tr); });
-  builder.AddDoubleProperty("Profile Velocity Target",    [&] { return _latestMotionTarget.velocity.convert<units::revolutions_per_minute>().value(); },  nullptr);
-  builder.AddDoubleProperty("Gains/Active Slot",          [&] { return _sparkPidController.GetSelectedSlot(); },                                          nullptr);
-  builder.AddDoubleProperty("Gains/FB P Gain",            [&] { return _configCache.feedbackP; },                                                         [&](double P) { TuneFeedbackProportional(P); });
-  builder.AddDoubleProperty("Gains/FB I Gain",            [&] { return _configCache.feedbackI; },                                                         [&](double I) { TuneFeedbackIntegral(I); });
-  builder.AddDoubleProperty("Gains/FB D Gain",            [&] { return _configCache.feedbackD; },                                                         [&](double D) { TuneFeedbackDerivative(D); });
-  builder.AddDoubleProperty("Gains/FF S Gain",            [&] { return _configCache.feedforwardStaticFriction.value(); },                                 [&](double S) { TuneFeedforwardStaticFriction(S*1_V); });
-  builder.AddDoubleProperty("Gains/FF Linear G Gain",     [&] { return _configCache.feedforwardLinearGravity.value(); },                                  [&](double lG) { TuneFeedforwardLinearGravity(lG*1_V); });
-  builder.AddDoubleProperty("Gains/FF Rotational G Gain", [&] { return _configCache.feedforwardRotationalGravity.value(); },                              [&](double rG) { TuneFeedforwardRotationalGravity(rG*1_V); });
-  builder.AddDoubleProperty("Gains/FF V Gain",            [&] { return _configCache.feedforwardVelocity.value(); },                                       [&](double V) { TuneFeedforwardVelocity(VoltsPerRpm{V}); });
-  builder.AddDoubleProperty("Gains/FF A Gain",            [&] { return _configCache.feedforwardAcceleration.value(); },                                   [&](double A) { TuneFeedforwardAcceleration(VoltsPerRpmPerS{A}); });
-  builder.AddDoubleProperty("Motion Config/Max vel",      [&] { return _configCache.motionMaxVelocity.value(); },                                         [&](double vel) { TuneMotionMaxVel(vel*1_rpm); });
-  builder.AddDoubleProperty("Motion Config/Max accel",    [&] { return _configCache.motionMaxAcceleration.value(); },                                     [&](double accel) { TuneMotionMaxAccel(accel*1_rev_per_m_per_s); });
+  //----------------------- Label --------------------------- Getter ---------------------------------------------------------------------------------------- Setter -------------------------------------------------
+  builder.AddDoubleProperty("Position (tr)",                  [&] { return GetPosition().value(); },                                                          nullptr);
+  builder.AddDoubleProperty("Velocity (rpm)",                 [&] { return GetVelocity().value(); },                                                          nullptr);
+  builder.AddDoubleProperty("Duty Cycle",                     [&] { return GetDutyCycle(); },                                                                 nullptr);
+  builder.AddDoubleProperty("Voltage",                        [&] { return GetMotorVoltage().value(); },                                                      nullptr);
+  builder.AddDoubleProperty("Current",                        [&] { return GetStatorCurrent().value(); },                                                     nullptr);
+  builder.AddDoubleProperty("Temperature (C)",                [&] { return _spark->GetMotorTemperature(); },                                                  nullptr);
+  builder.AddDoubleProperty("Position Target (tr)",           [&] { return _positionTarget.value(); },                                                        [&](double targ) { SetPositionTarget(targ*1_tr); });
+  builder.AddDoubleProperty("Velocity Target (rpm)",          [&] { return _velocityTarget.value(); },                                                        [&](double targ) { SetVelocityTarget(targ*1_tps); });
+  builder.AddDoubleProperty("Profile Position Target (tr)",   [&] { return _latestMotionTarget.position.value(); },                                           [&](double targ) { SetMotionProfileTarget(targ*1_tr); });
+  builder.AddDoubleProperty("Profile Velocity Target (rpm)",  [&] { return _latestMotionTarget.velocity.convert<units::revolutions_per_minute>().value(); },  nullptr);
+  builder.AddDoubleProperty("Gains/Active Slot",              [&] { return _sparkPidController.GetSelectedSlot(); },                                          nullptr);
+  builder.AddDoubleProperty("Gains/FB P Gain",                [&] { return _configCache.feedbackP; },                                                         [&](double P) { TuneFeedbackProportional(P); });
+  builder.AddDoubleProperty("Gains/FB I Gain",                [&] { return _configCache.feedbackI; },                                                         [&](double I) { TuneFeedbackIntegral(I); });
+  builder.AddDoubleProperty("Gains/FB D Gain",                [&] { return _configCache.feedbackD; },                                                         [&](double D) { TuneFeedbackDerivative(D); });
+  builder.AddDoubleProperty("Gains/FF S Gain (V)",            [&] { return _configCache.feedforwardStaticFriction.value(); },                                 [&](double S) { TuneFeedforwardStaticFriction(S*1_V); });
+  builder.AddDoubleProperty("Gains/FF Linear G Gain (V)",     [&] { return _configCache.feedforwardLinearGravity.value(); },                                  [&](double lG) { TuneFeedforwardLinearGravity(lG*1_V); });
+  builder.AddDoubleProperty("Gains/FF Rotational G Gain (V)", [&] { return _configCache.feedforwardRotationalGravity.value(); },                              [&](double rG) { TuneFeedforwardRotationalGravity(rG*1_V); });
+  builder.AddDoubleProperty("Gains/FF V Gain (V/rpm)",        [&] { return _configCache.feedforwardVelocity.value(); },                                       [&](double V) { TuneFeedforwardVelocity(VoltsPerRpm{V}); });
+  builder.AddDoubleProperty("Gains/FF A Gain (V/rpmps)",      [&] { return _configCache.feedforwardAcceleration.value(); },                                   [&](double A) { TuneFeedforwardAcceleration(VoltsPerRpmPerS{A}); });
+  builder.AddDoubleProperty("Motion Config/Max vel (rpm)",    [&] { return _configCache.motionMaxVelocity.value(); },                                         [&](double vel) { TuneMotionMaxVel(vel*1_rpm); });
+  builder.AddDoubleProperty("Motion Config/Max accel (rpmps)",[&] { return _configCache.motionMaxAcceleration.value(); },                                     [&](double accel) { TuneMotionMaxAccel(accel*1_rev_per_m_per_s); });
   // clang-format on
 }
 
