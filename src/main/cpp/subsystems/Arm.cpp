@@ -20,6 +20,7 @@ Arm::Arm() {
 
 void Arm::Periodic() {
   _motor.UpdateMotionProfile();
+  _motor.CheckAlerts();
 }
 
 void Arm::SimulationPeriodic() {

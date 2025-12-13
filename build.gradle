@@ -99,3 +99,11 @@ model {
         }
     }
 }
+
+// Disable test tasks for Debug variants but keep Release tests enabled
+tasks.matching { t ->
+    // look for test tasks that include "debug" in their name (case-insensitive)
+    t.name.toLowerCase().contains('test') && t.name.toLowerCase().contains('debug')
+}.configureEach {
+    enabled = false
+}

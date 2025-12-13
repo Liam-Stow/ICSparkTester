@@ -12,13 +12,14 @@ Elevator::Elevator() {
     config.closedLoop.P(1.0);
     config.closedLoop.maxMotion.CruiseVelocity(500); // rpm
     config.closedLoop.maxMotion.MaxAcceleration(500); // rev/s^2
-    config.closedLoop.feedForward.kCos(0.16); // V
+    config.closedLoop.feedForward.kG(0.16); // V
     config.closedLoop.feedForward.kV(0.02); // V per rpm
     _motor.OverwriteConfig(config);
 };
 
 void Elevator::Periodic() {
     _motor.UpdateMotionProfile();
+    _motor.CheckAlerts();
 }
 
 void Elevator::SimulationPeriodic() {

@@ -14,6 +14,7 @@ Flywheel::Flywheel() {
 
 void Flywheel::Periodic() {
     _motor.UpdateMotionProfile();
+    _motor.CheckAlerts();
 }
 
 void Flywheel::SimulationPeriodic() {

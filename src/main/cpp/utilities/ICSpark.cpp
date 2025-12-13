@@ -52,6 +52,12 @@ rev::REVLibError ICSpark::Configure(rev::spark::SparkBaseConfig& config,
     error = _spark->ConfigureAsync(config, resetMode, persistMode);
   } else {
     error = _spark->Configure(config, resetMode, persistMode);
+    if (error != rev::REVLibError::kOk) {
+      _configErrorAlert.SetText("CONFIGURATION ERROR in Spark controller ID" +
+                                std::to_string(_spark->GetDeviceId()) + ": RevLibError ID " +
+                                std::to_string(int(error)));
+      _configErrorAlert.Set(true);
+    }
   }
   RefreshConfigCache();
   return error;
@@ -99,7 +105,7 @@ void ICSpark::SetMaxMotionTarget(units::turn_t target, units::volt_t arbFeedForw
       units::turn_t{_sparkPidController.GetMAXMotionSetpointPosition()},
       units::revolutions_per_minute_t{_sparkPidController.GetMAXMotionSetpointVelocity()}};
 
-  _sparkPidController.SetSetpoint(_latestMotionTarget.position.value(),
+  _sparkPidController.SetSetpoint(target.value(),
                                   rev::spark::SparkLowLevel::ControlType::kMAXMotionPositionControl,
                                   slot, _arbFeedForward.value());
 }
@@ -316,6 +322,10 @@ units::ampere_t ICSpark::GetStatorCurrent() {
   return _spark->GetOutputCurrent() * 1_A;
 }
 
+units::celsius_t ICSpark::GetMotorTemperature() {
+  return _spark->GetMotorTemperature() * 1_degC;
+}
+
 units::volt_t ICSpark::CalcSimVoltage() {
   return _simSpark.GetAppliedOutput() * frc::RobotController::GetBatteryVoltage();
 }
@@ -341,4 +351,34 @@ bool ICSpark::InMotionMode() {
 ICSpark::MPState ICSpark::CalcNextMotionTarget(MPState current, units::turn_t goalPosition,
                                                units::second_t lookahead) {
   return _motionProfile.Calculate(lookahead, current, {goalPosition, 0_rpm});
+}
+
+void ICSpark::CheckAlerts() {
+  // Temperature alert logic
+  if (GetMotorTemperature() > 70_degC) {
+    if (!_temperatureAlert.Get()) {
+      _temperatureAlert.SetText("TEMPERATURE TOO HIGH in Spark controller ID" + std::to_string(_spark->GetDeviceId()));
+      _temperatureAlert.Set(true);
+    }
+  } else if (_temperatureAlert.Get()) {
+    _temperatureAlert.Set(false);
+  }
+
+  // Current alert timing logic
+  if (GetStatorCurrent() > 80_A) {
+    _currentAlertTimer.Start();
+  } else if (_currentAlertTimer.IsRunning()) {
+    _currentAlertTimer.Stop();
+    _currentAlertTimer.Reset();
+  }
+
+  // Current alert display logic
+  if (_currentAlertTimer.Get() > 2_s) {
+    if (!_currentAlert.Get()) {
+      _currentAlert.SetText("CURRENT TOO HIGH in Spark controller ID" + std::to_string(_spark->GetDeviceId()));
+      _currentAlert.Set(true);
+    }
+  } else if (_currentAlert.Get()) {
+    _currentAlert.Set(false);
+  }
 }

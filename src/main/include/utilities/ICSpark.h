@@ -5,6 +5,8 @@
 #include <rev/config/SparkBaseConfigAccessor.h>
 #include <frc/controller/PIDController.h>
 #include <frc/trajectory/TrapezoidProfile.h>
+#include <frc/Alert.h>
+#include <frc/Timer.h>
 #include <units/acceleration.h>
 #include <units/length.h>
 #include <units/angle.h>
@@ -13,6 +15,7 @@
 #include <units/time.h>
 #include <units/current.h>
 #include <units/velocity.h>
+#include <units/temperature.h>
 #include <wpi/sendable/Sendable.h>
 #include <wpi/sendable/SendableBuilder.h>
 #include "utilities/ICSparkEncoder.h"
@@ -236,6 +239,11 @@ class ICSpark : public wpi::Sendable {
   units::ampere_t GetStatorCurrent();
 
   /**
+   * Get the temperature of the motor.
+   */
+  units::celsius_t GetMotorTemperature();
+
+  /**
    * Common interface to stop the motor until Set is called again or closed loop control is started.
    */
   void StopMotor() { SetDutyCycle(0); };
@@ -313,6 +321,9 @@ class ICSpark : public wpi::Sendable {
 
   // Sendable setup, called automatically when this is passed into smartDashbaord::PutData()
   void InitSendable(wpi::SendableBuilder& builder) override;
+
+  // Check for temperature, voltage and current alerts. This should be called periodically
+  void CheckAlerts();
 
  protected:
   // Use a relative (alternarte for Max, external for Flex) encoder as the logging device.
@@ -453,6 +464,12 @@ class ICSpark : public wpi::Sendable {
   ControlType _controlType = ControlType::kDutyCycle;
   rev::spark::SparkLowLevel::ControlType GetREVControlType();
   bool InMotionMode();
+
+  // Alerts - Text added later
+  frc::Alert _configErrorAlert{"", frc::Alert::AlertType::kError};
+  frc::Alert _temperatureAlert{"", frc::Alert::AlertType::kWarning};
+  frc::Alert _currentAlert{"", frc::Alert::AlertType::kWarning};
+  frc::Timer _currentAlertTimer;
 
   // Simulation objects
   frc::DCMotor _vortexModel = frc::DCMotor::NeoVortex();

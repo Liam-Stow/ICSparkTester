@@ -83,6 +83,14 @@ TEST_F(ElevatorTest, wpiProfile) {
   ExpectNearLinear(target, elevator.GetHeight());
 }
 
+// TEST_F(ElevatorTest, maxMotion) {
+//   auto target = 0.75_m;
+//   auto cmd = elevator.MaxMotionTo(target);
+//   cmd.Schedule();
+//   SimCmdScheduler(5_s);
+//   ExpectNearLinear(target, elevator.GetHeight());
+// }
+
 TEST_F(ElevatorTest, pid) {
   auto target = 0.5_m;
   auto cmd = elevator.PIDTo(target);

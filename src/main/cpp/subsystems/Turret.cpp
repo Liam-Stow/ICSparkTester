@@ -28,6 +28,7 @@ Turret::Turret() {
 
 void Turret::Periodic() {
   _motor.UpdateMotionProfile();
+  _motor.CheckAlerts();
 }
 
 void Turret::SimulationPeriodic() {

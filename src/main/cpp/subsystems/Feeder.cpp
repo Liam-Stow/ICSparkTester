@@ -10,7 +10,9 @@ Feeder::Feeder() {
     _motor.OverwriteConfig(config);
 };
 
-void Feeder::Periodic() {}
+void Feeder::Periodic() {
+    _motor.CheckAlerts();
+}
 
 void Feeder::SimulationPeriodic() {
     auto velocity = _motor.CalcSimVoltage() / 12_V * 5700_rpm;
