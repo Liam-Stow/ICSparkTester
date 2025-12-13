@@ -23,24 +23,24 @@ void ICSpark::InitSendable(wpi::SendableBuilder& builder) {
   builder.AddDoubleProperty("Position (tr)",                  [&] { return GetPosition().value(); },                                                          nullptr);
   builder.AddDoubleProperty("Velocity (rpm)",                 [&] { return GetVelocity().value(); },                                                          nullptr);
   builder.AddDoubleProperty("Duty Cycle",                     [&] { return GetDutyCycle(); },                                                                 nullptr);
-  builder.AddDoubleProperty("Voltage",                        [&] { return GetMotorVoltage().value(); },                                                      nullptr);
-  builder.AddDoubleProperty("Current",                        [&] { return GetStatorCurrent().value(); },                                                     nullptr);
+  builder.AddDoubleProperty("Voltage (V)",                    [&] { return GetMotorVoltage().value(); },                                                      nullptr);
+  builder.AddDoubleProperty("Current (A)",                    [&] { return GetStatorCurrent().value(); },                                                     nullptr);
   builder.AddDoubleProperty("Temperature (C)",                [&] { return _spark->GetMotorTemperature(); },                                                  nullptr);
   builder.AddDoubleProperty("Position Target (tr)",           [&] { return _positionTarget.value(); },                                                        [&](double targ) { SetPositionTarget(targ*1_tr); });
   builder.AddDoubleProperty("Velocity Target (rpm)",          [&] { return _velocityTarget.value(); },                                                        [&](double targ) { SetVelocityTarget(targ*1_tps); });
   builder.AddDoubleProperty("Profile Position Target (tr)",   [&] { return _latestMotionTarget.position.value(); },                                           [&](double targ) { SetMotionProfileTarget(targ*1_tr); });
   builder.AddDoubleProperty("Profile Velocity Target (rpm)",  [&] { return _latestMotionTarget.velocity.convert<units::revolutions_per_minute>().value(); },  nullptr);
   builder.AddDoubleProperty("Gains/Active Slot",              [&] { return _sparkPidController.GetSelectedSlot(); },                                          nullptr);
-  builder.AddDoubleProperty("Gains/FB P Gain",                [&] { return _configCache.feedbackP; },                                                         [&](double P) { TuneFeedbackProportional(P); });
-  builder.AddDoubleProperty("Gains/FB I Gain",                [&] { return _configCache.feedbackI; },                                                         [&](double I) { TuneFeedbackIntegral(I); });
-  builder.AddDoubleProperty("Gains/FB D Gain",                [&] { return _configCache.feedbackD; },                                                         [&](double D) { TuneFeedbackDerivative(D); });
-  builder.AddDoubleProperty("Gains/FF S Gain (V)",            [&] { return _configCache.feedforwardStaticFriction.value(); },                                 [&](double S) { TuneFeedforwardStaticFriction(S*1_V); });
-  builder.AddDoubleProperty("Gains/FF Linear G Gain (V)",     [&] { return _configCache.feedforwardLinearGravity.value(); },                                  [&](double lG) { TuneFeedforwardLinearGravity(lG*1_V); });
-  builder.AddDoubleProperty("Gains/FF Rotational G Gain (V)", [&] { return _configCache.feedforwardRotationalGravity.value(); },                              [&](double rG) { TuneFeedforwardRotationalGravity(rG*1_V); });
-  builder.AddDoubleProperty("Gains/FF V Gain (V/rpm)",        [&] { return _configCache.feedforwardVelocity.value(); },                                       [&](double V) { TuneFeedforwardVelocity(VoltsPerRpm{V}); });
-  builder.AddDoubleProperty("Gains/FF A Gain (V/rpmps)",      [&] { return _configCache.feedforwardAcceleration.value(); },                                   [&](double A) { TuneFeedforwardAcceleration(VoltsPerRpmPerS{A}); });
-  builder.AddDoubleProperty("Motion Config/Max vel (rpm)",    [&] { return _configCache.motionMaxVelocity.value(); },                                         [&](double vel) { TuneMotionMaxVel(vel*1_rpm); });
-  builder.AddDoubleProperty("Motion Config/Max accel (rpmps)",[&] { return _configCache.motionMaxAcceleration.value(); },                                     [&](double accel) { TuneMotionMaxAccel(accel*1_rev_per_m_per_s); });
+  builder.AddDoubleProperty("Gains/FB P",                     [&] { return _configCache.feedbackP; },                                                         [&](double P) { TuneFeedbackProportional(P); });
+  builder.AddDoubleProperty("Gains/FB I",                     [&] { return _configCache.feedbackI; },                                                         [&](double I) { TuneFeedbackIntegral(I); });
+  builder.AddDoubleProperty("Gains/FB D",                     [&] { return _configCache.feedbackD; },                                                         [&](double D) { TuneFeedbackDerivative(D); });
+  builder.AddDoubleProperty("Gains/FF S (V)",                 [&] { return _configCache.feedforwardStaticFriction.value(); },                                 [&](double S) { TuneFeedforwardStaticFriction(S*1_V); });
+  builder.AddDoubleProperty("Gains/FF Linear G (V)",          [&] { return _configCache.feedforwardLinearGravity.value(); },                                  [&](double lG) { TuneFeedforwardLinearGravity(lG*1_V); });
+  builder.AddDoubleProperty("Gains/FF Rotational G (V)",      [&] { return _configCache.feedforwardRotationalGravity.value(); },                              [&](double rG) { TuneFeedforwardRotationalGravity(rG*1_V); });
+  builder.AddDoubleProperty("Gains/FF V (V_per_rpm)",         [&] { return _configCache.feedforwardVelocity.value(); },                                       [&](double V) { TuneFeedforwardVelocity(VoltsPerRpm{V}); });
+  builder.AddDoubleProperty("Gains/FF A (V_per_rpm_per_s)",   [&] { return _configCache.feedforwardAcceleration.value(); },                                   [&](double A) { TuneFeedforwardAcceleration(VoltsPerRpmPerS{A}); });
+  builder.AddDoubleProperty("Motion/Max vel (rpm)",           [&] { return _configCache.motionMaxVelocity.value(); },                                         [&](double vel) { TuneMotionMaxVel(vel*1_rpm); });
+  builder.AddDoubleProperty("Motion/Max accel (rpm_per_s)",   [&] { return _configCache.motionMaxAcceleration.value(); },                                     [&](double accel) { TuneMotionMaxAccel(accel*1_rev_per_m_per_s); });
   // clang-format on
 }
 
@@ -280,8 +280,9 @@ void ICSpark::RefreshConfigCache() {
       _configAccessor.closedLoop.feedForward.getkA(_sparkPidController.GetSelectedSlot())};
   _configCache.feedforwardCosineRatio =
       _configAccessor.closedLoop.feedForward.getkCosRatio(_sparkPidController.GetSelectedSlot());
-  _configCache.motionMaxVelocity = units::revolutions_per_minute_t{
-      _configAccessor.closedLoop.maxMotion.GetCruiseVelocity(_sparkPidController.GetSelectedSlot())};
+  _configCache.motionMaxVelocity =
+      units::revolutions_per_minute_t{_configAccessor.closedLoop.maxMotion.GetCruiseVelocity(
+          _sparkPidController.GetSelectedSlot())};
   _configCache.motionMaxAcceleration = units::revolutions_per_minute_per_second_t{
       _configAccessor.closedLoop.maxMotion.GetMaxAcceleration(
           _sparkPidController.GetSelectedSlot())};
@@ -357,7 +358,8 @@ void ICSpark::CheckAlerts() {
   // Temperature alert logic
   if (GetMotorTemperature() > 70_degC) {
     if (!_temperatureAlert.Get()) {
-      _temperatureAlert.SetText("TEMPERATURE TOO HIGH in Spark controller ID" + std::to_string(_spark->GetDeviceId()));
+      _temperatureAlert.SetText("TEMPERATURE TOO HIGH in Spark controller ID" +
+                                std::to_string(_spark->GetDeviceId()));
       _temperatureAlert.Set(true);
     }
   } else if (_temperatureAlert.Get()) {
@@ -375,7 +377,8 @@ void ICSpark::CheckAlerts() {
   // Current alert display logic
   if (_currentAlertTimer.Get() > 2_s) {
     if (!_currentAlert.Get()) {
-      _currentAlert.SetText("CURRENT TOO HIGH in Spark controller ID" + std::to_string(_spark->GetDeviceId()));
+      _currentAlert.SetText("CURRENT TOO HIGH in Spark controller ID" +
+                            std::to_string(_spark->GetDeviceId()));
       _currentAlert.Set(true);
     }
   } else if (_currentAlert.Get()) {

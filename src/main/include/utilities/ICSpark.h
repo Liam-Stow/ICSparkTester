@@ -298,7 +298,8 @@ class ICSpark : public wpi::Sendable {
    * @param async Whether to run the configuration asynchronously (without waiting for a response)
    * @return REVLibError::kOk if successful, async will always return kOk
    */
-  rev::REVLibError Configure(rev::spark::SparkBaseConfig& config, rev::spark::SparkBase::ResetMode resetMode,
+  rev::REVLibError Configure(rev::spark::SparkBaseConfig& config,
+                             rev::spark::SparkBase::ResetMode resetMode,
                              rev::spark::SparkBase::PersistMode persistMode, bool async = false);
 
   /**
@@ -333,7 +334,6 @@ class ICSpark : public wpi::Sendable {
   }
 
  private:
-
   /**
    * Refresh internal config cache to match the SPARK's current configuration.
    */
@@ -439,8 +439,8 @@ class ICSpark : public wpi::Sendable {
     units::volt_t feedforwardStaticFriction = 0_V;
     units::volt_t feedforwardLinearGravity = 0_V;
     units::volt_t feedforwardRotationalGravity = 0_V;
-    VoltsPerRpm feedforwardVelocity = 0_V/1_rpm;
-    VoltsPerRpmPerS feedforwardAcceleration = 0_V/1_rev_per_m_per_s;
+    VoltsPerRpm feedforwardVelocity = 0_V / 1_rpm;
+    VoltsPerRpmPerS feedforwardAcceleration = 0_V / 1_rev_per_m_per_s;
     double feedforwardCosineRatio = 0.0;
     units::revolutions_per_minute_t motionMaxVelocity = 0_rpm;
     units::revolutions_per_minute_per_second_t motionMaxAcceleration = 0_rev_per_m_per_s;
