@@ -1,24 +1,26 @@
 #pragma once
 
+#include "utilities/ICSparkEncoder.h"
+
+#include <frc/Alert.h>
+#include <frc/Timer.h>
+#include <frc/controller/PIDController.h>
+#include <frc/trajectory/TrapezoidProfile.h>
+
 #include <rev/SparkBase.h>
 #include <rev/SparkSim.h>
 #include <rev/config/SparkBaseConfigAccessor.h>
-#include <frc/controller/PIDController.h>
-#include <frc/trajectory/TrapezoidProfile.h>
-#include <frc/Alert.h>
-#include <frc/Timer.h>
 #include <units/acceleration.h>
-#include <units/length.h>
 #include <units/angle.h>
-#include <units/angular_velocity.h>
 #include <units/angular_acceleration.h>
-#include <units/time.h>
+#include <units/angular_velocity.h>
 #include <units/current.h>
-#include <units/velocity.h>
+#include <units/length.h>
 #include <units/temperature.h>
+#include <units/time.h>
+#include <units/velocity.h>
 #include <wpi/sendable/Sendable.h>
 #include <wpi/sendable/SendableBuilder.h>
-#include "utilities/ICSparkEncoder.h"
 
 /**
  * Wrapper around the Rev CANSparkBase class with some convenience features.
@@ -29,19 +31,19 @@
 class ICSpark : public wpi::Sendable {
  public:
   enum class ControlType {
-    kDutyCycle = (int)rev::spark::SparkLowLevel::ControlType::kDutyCycle,
-    kVelocity = (int)rev::spark::SparkLowLevel::ControlType::kVelocity,
-    kVoltage = (int)rev::spark::SparkLowLevel::ControlType::kVoltage,
-    kPosition = (int)rev::spark::SparkLowLevel::ControlType::kPosition,
-    kMaxMotion = (int)rev::spark::SparkLowLevel::ControlType::kMAXMotionPositionControl,
-    kCurrent = (int)rev::spark::SparkLowLevel::ControlType::kCurrent,
-    kMotionProfile = 10
+    DUTY_CYCLE = (int)rev::spark::SparkLowLevel::ControlType::kDutyCycle,
+    VELOCITY = (int)rev::spark::SparkLowLevel::ControlType::kVelocity,
+    VOLTAGE = (int)rev::spark::SparkLowLevel::ControlType::kVoltage,
+    POSITION = (int)rev::spark::SparkLowLevel::ControlType::kPosition,
+    MAX_MOTION = (int)rev::spark::SparkLowLevel::ControlType::kMAXMotionPositionControl,
+    CURRENT = (int)rev::spark::SparkLowLevel::ControlType::kCurrent,
+    MOTION_PROFILE = 10
   };
 
   using VoltsPerRpm = units::unit_t<
-      units::compound_unit<units::volts, units::inverse<units::revolutions_per_minute>>>;
+    units::compound_unit<units::volts, units::inverse<units::revolutions_per_minute>>>;
   using VoltsPerRpmPerS = units::unit_t<
-      units::compound_unit<units::volts, units::inverse<units::revolutions_per_minute_per_second>>>;
+    units::compound_unit<units::volts, units::inverse<units::revolutions_per_minute_per_second>>>;
 
   /**
    * Create a new object to control a SPARK motor controller.
@@ -50,7 +52,7 @@ class ICSpark : public wpi::Sendable {
    * @param inbultEncoder The encoder built into the NEO
    */
   ICSpark(rev::spark::SparkBase* spark, rev::spark::SparkRelativeEncoder& inbuiltEncoder,
-          rev::spark::SparkBaseConfigAccessor& configAccessor);
+    rev::spark::SparkBaseConfigAccessor& configAccessor);
 
   /**
    * Sets position of motor
@@ -71,7 +73,7 @@ class ICSpark : public wpi::Sendable {
    * @param slot The closed loop configuration slot to use for this control action
    */
   void SetPositionTarget(units::turn_t target, units::volt_t arbFeedForward = 0.0_V,
-                         rev::spark::ClosedLoopSlot slot = rev::spark::ClosedLoopSlot::kSlot0);
+    rev::spark::ClosedLoopSlot slot = rev::spark::ClosedLoopSlot::kSlot0);
 
   /**
    * Sets a closed loop position target (aka reference or goal) for the motor to drive to using the
@@ -89,7 +91,7 @@ class ICSpark : public wpi::Sendable {
    * @param slot The closed loop configuration slot to use for this control action
    */
   void SetMaxMotionTarget(units::turn_t target, units::volt_t arbFeedForward = 0.0_V,
-                          rev::spark::ClosedLoopSlot slot = rev::spark::ClosedLoopSlot::kSlot0);
+    rev::spark::ClosedLoopSlot slot = rev::spark::ClosedLoopSlot::kSlot0);
 
   /**
    * !! Must periodically call UpdateMotionProfile() !!
@@ -110,7 +112,7 @@ class ICSpark : public wpi::Sendable {
    * @param slot The closed loop configuration slot to use for this control action
    */
   void SetMotionProfileTarget(units::turn_t target, units::volt_t arbFeedForward = 0.0_V,
-                              rev::spark::ClosedLoopSlot slot = rev::spark::ClosedLoopSlot::kSlot0);
+    rev::spark::ClosedLoopSlot slot = rev::spark::ClosedLoopSlot::kSlot0);
 
   /**
    * Sets the closed loop target (aka reference or goal) for the motor to drive to.
@@ -124,8 +126,8 @@ class ICSpark : public wpi::Sendable {
    * @param slot The closed loop configuration slot to use for this control action
    */
   void SetVelocityTarget(units::revolutions_per_minute_t target,
-                         units::volt_t arbFeedForward = 0.0_V,
-                         rev::spark::ClosedLoopSlot slot = rev::spark::ClosedLoopSlot::kSlot0);
+    units::volt_t arbFeedForward = 0.0_V,
+    rev::spark::ClosedLoopSlot slot = rev::spark::ClosedLoopSlot::kSlot0);
 
   /**
    * Update motion profile targets and feedforward calculations. This is required to be called
@@ -143,9 +145,8 @@ class ICSpark : public wpi::Sendable {
    * @param vel The velocity target
    * @param accel The acceleration target
    */
-  units::volt_t CalculateFeedforward(
-      units::turn_t pos, units::revolutions_per_minute_t vel,
-      units::revolutions_per_minute_per_second_t accel = 0_tr_per_s_sq);
+  units::volt_t CalculateFeedforward(units::turn_t pos, units::revolutions_per_minute_t vel,
+    units::revolutions_per_minute_per_second_t accel = 0_tr_per_s_sq);
 
   /**
    * Gets the current closed loop position target if there is one. Zero otherwise.
@@ -205,8 +206,8 @@ class ICSpark : public wpi::Sendable {
    * not provided, it will be calculated from the velocity over time (this may fall out of sync with
    * a WPI physics simulation).
    */
-  void IterateSim(units::revolutions_per_minute_t velocity,
-                  std::optional<units::turn_t> position = std::nullopt);
+  void IterateSim(
+    units::revolutions_per_minute_t velocity, std::optional<units::turn_t> position = std::nullopt);
 
   /**
    * Gets the current closed loop control type.
@@ -241,7 +242,7 @@ class ICSpark : public wpi::Sendable {
   /**
    * Get the temperature of the motor.
    */
-  units::celsius_t GetMotorTemperature();
+  units::celsius_t GetTemperature();
 
   /**
    * Common interface to stop the motor until Set is called again or closed loop control is started.
@@ -298,9 +299,8 @@ class ICSpark : public wpi::Sendable {
    * @param async Whether to run the configuration asynchronously (without waiting for a response)
    * @return REVLibError::kOk if successful, async will always return kOk
    */
-  rev::REVLibError Configure(rev::spark::SparkBaseConfig& config,
-                             rev::spark::SparkBase::ResetMode resetMode,
-                             rev::spark::SparkBase::PersistMode persistMode, bool async = false);
+  rev::REVLibError Configure(rev::spark::SparkBaseConfig& config, rev::ResetMode resetMode,
+    rev::PersistMode persistMode, bool async = false);
 
   /**
    * Convenience method for calling
@@ -431,20 +431,18 @@ class ICSpark : public wpi::Sendable {
   void TuneFeedforwardCosineRatio(double ratio);
 
   rev::spark::SparkBase* _spark;
-  rev::spark::SparkBaseConfigAccessor& _configAccessor;
-  struct ConfigCache {
-    double feedbackP = 0.0;
-    double feedbackI = 0.0;
-    double feedbackD = 0.0;
-    units::volt_t feedforwardStaticFriction = 0_V;
-    units::volt_t feedforwardLinearGravity = 0_V;
-    units::volt_t feedforwardRotationalGravity = 0_V;
-    VoltsPerRpm feedforwardVelocity = 0_V / 1_rpm;
-    VoltsPerRpmPerS feedforwardAcceleration = 0_V / 1_rev_per_m_per_s;
-    double feedforwardCosineRatio = 0.0;
-    units::revolutions_per_minute_t motionMaxVelocity = 0_rpm;
-    units::revolutions_per_minute_per_second_t motionMaxAcceleration = 0_rev_per_m_per_s;
-  } _configCache;
+  rev::spark::SparkBaseConfigAccessor _configAccessor;
+  double _cacheFeedbackP = 0.0;
+  double _cacheFeedbackI = 0.0;
+  double _cacheFeedbackD = 0.0;
+  units::volt_t _cacheFeedforwardStaticFriction = 0_V;
+  units::volt_t _cacheFeedforwardLinearGravity = 0_V;
+  units::volt_t _cacheFeedforwardRotationalGravity = 0_V;
+  VoltsPerRpm _cacheFeedforwardVelocity = 0_V / 1_rpm;
+  VoltsPerRpmPerS _cacheFeedforwardAcceleration = 0_V / 1_rev_per_m_per_s;
+  double _cacheFeedforwardCosineRatio = 0.0;
+  units::revolutions_per_minute_t _cacheMotionMaxVelocity = 0_rpm;
+  units::revolutions_per_minute_per_second_t _cacheMotionMaxAcceleration = 0_rev_per_m_per_s;
 
   // Feedback control objects
   rev::spark::SparkClosedLoopController _sparkPidController{_spark->GetClosedLoopController()};
@@ -456,16 +454,19 @@ class ICSpark : public wpi::Sendable {
   units::turn_t _positionTarget{0};
   units::revolutions_per_minute_t _velocityTarget{0};
   frc::TrapezoidProfile<units::turns> _motionProfile{{0_rpm, 0_rev_per_m_per_s}};
-  MPState CalcNextMotionTarget(MPState current, units::turn_t goalPosition,
-                               units::second_t lookahead = 20_ms);
+  MPState CalcNextMotionTarget(
+    MPState current, units::turn_t goalPosition, units::second_t lookahead = 20_ms);
   MPState _latestMotionTarget;
 
   // Control Type management
-  ControlType _controlType = ControlType::kDutyCycle;
+  ControlType _controlType = ControlType::DUTY_CYCLE;
   rev::spark::SparkLowLevel::ControlType GetREVControlType();
   bool InMotionMode();
 
   // Alerts - Text added later
+  /* Please Note: Enabling []All Exceptions will cause VScode to breakpoint on a
+   * exception that purposefully thrown and caught by WPIlib. The exception is
+   * thrown when adding an alert for the first time. */
   frc::Alert _configErrorAlert{"", frc::Alert::AlertType::kError};
   frc::Alert _temperatureAlert{"", frc::Alert::AlertType::kWarning};
   frc::Alert _currentAlert{"", frc::Alert::AlertType::kWarning};
