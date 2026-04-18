@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew runFrcUserProgramTestWindowsx86-64ReleaseGoogleTestExe)",
+      "Bash(./gradlew runFrcUserProgramTestWindowsx86-64ReleaseGoogleTestExe --stacktrace)",
+      "Bash(xargs cat *)",
+      "Bash(./build/install/frcUserProgramTest/windowsx86-64/release/lib/frcUserProgramTest.exe --gtest_filter=\"FeederTest.*\")"
+    ]
+  }
+}

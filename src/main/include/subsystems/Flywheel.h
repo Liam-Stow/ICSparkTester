@@ -35,4 +35,5 @@ class Flywheel : public frc2::SubsystemBase {
   static constexpr frc::DCMotor MOTOR_MODEL = frc::DCMotor::NeoVortex();
   frc::LinearSystem<1,1,1> _flywheelSystem = frc::LinearSystemId::FlywheelSystem(MOTOR_MODEL, MOI, GEARING);
   frc::sim::FlywheelSim _sim{_flywheelSystem, MOTOR_MODEL};
+  units::turn_t _simPosition{0};
 };

@@ -5,6 +5,7 @@
 #include <frc2/command/CommandScheduler.h>
 #include <frc2/command/CommandPtr.h>
 #include <units/time.h>
+#include <networktables/NetworkTableInstance.h>
 
 #include "subsystems/Arm.h"
 #include "subsystems/Elevator.h"
@@ -14,6 +15,11 @@
 
 int main(int argc, char** argv) {
   HAL_Initialize(500, 0);
+  // Prevent NT background thread from calling sendable callbacks on
+  // destroyed motors. Subsystems register their motors with SmartDashboard
+  // which is fine for production, but in tests the motors are destroyed
+  // between test cases while NT's update loop may still reference them.
+  nt::NetworkTableInstance::GetDefault().StopServer();
   frc::sim::DriverStationSim::SetEnabled(true);
   frc::sim::DriverStationSim::NotifyNewData();
   ::testing::InitGoogleTest(&argc, argv);
@@ -47,10 +53,13 @@ void ExpectNearLinearVelocity(units::meters_per_second_t expected,
 }
 
 // ARM TESTS
-class ArmTest : public testing::Test {};
+class ArmTest : public testing::Test {
+ protected:
+  void TearDown() override { frc2::CommandScheduler::GetInstance().CancelAll(); }
+  Arm arm;
+};
 
 TEST_F(ArmTest, wpiProfile) {
-  Arm arm;
   auto target = 90_deg;
   auto cmd = arm.WPIProfileTo(target);
   cmd.Schedule();
@@ -60,7 +69,6 @@ TEST_F(ArmTest, wpiProfile) {
 }
 
 TEST_F(ArmTest, pid) {
-  Arm arm;
   units::turn_t target = 90_deg;
   auto cmd = arm.PIDTo(target);
   cmd.Schedule();
@@ -72,6 +80,7 @@ TEST_F(ArmTest, pid) {
 // ELEVATOR TESTS
 class ElevatorTest : public testing::Test {
  protected:
+  void TearDown() override { frc2::CommandScheduler::GetInstance().CancelAll(); }
   Elevator elevator;
 };
 
@@ -111,6 +120,7 @@ TEST_F(ElevatorTest, driveWithDutyCycle) {
 // FLYWHEEL TESTS
 class FlywheelTest : public testing::Test {
  protected:
+  void TearDown() override { frc2::CommandScheduler::GetInstance().CancelAll(); }
   Flywheel flywheel;
 };
 
@@ -134,6 +144,7 @@ TEST_F(FlywheelTest, spinAtDutyCycle) {
 // TURRET TESTS
 class TurretTest : public testing::Test {
  protected:
+  void TearDown() override { frc2::CommandScheduler::GetInstance().CancelAll(); }
   Turret turret;
 };
 
@@ -165,6 +176,7 @@ TEST_F(TurretTest, driveWithDutyCycle) {
 // FEEDER TESTS
 class FeederTest : public testing::Test {
  protected:
+  void TearDown() override { frc2::CommandScheduler::GetInstance().CancelAll(); }
   Feeder feeder;
 };
 

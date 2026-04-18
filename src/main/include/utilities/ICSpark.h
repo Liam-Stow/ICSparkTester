@@ -54,6 +54,8 @@ class ICSpark : public wpi::Sendable {
   ICSpark(rev::spark::SparkBase* spark, rev::spark::SparkRelativeEncoder& inbuiltEncoder,
     rev::spark::SparkBaseConfigAccessor& configAccessor);
 
+  virtual ~ICSpark();
+
   /**
    * Sets position of motor
    *

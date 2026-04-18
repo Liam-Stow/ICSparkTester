@@ -20,7 +20,9 @@ void Flywheel::Periodic() {
 void Flywheel::SimulationPeriodic() {
     _sim.SetInputVoltage(_motor.CalcSimVoltage());
     _sim.Update(20_ms);
-    _motor.IterateSim(_sim.GetAngularVelocity());
+    auto velocity = _sim.GetAngularVelocity();
+    _simPosition += units::turn_t{velocity * 20_ms};
+    _motor.IterateSim(velocity, _simPosition);
 }
 
 frc2::CommandPtr Flywheel::SpinAt(units::turns_per_second_t velocity) {
