@@ -1,0 +1,82 @@
+---
+Checks: >
+  -*,
+  bugprone-assert-side-effect,
+  bugprone-copy-constructor-init,
+  bugprone-dangling-handle,
+  bugprone-implicit-widening-of-multiplication-result,
+  bugprone-integer-division,
+  bugprone-move-forwarding-reference,
+  bugprone-multiple-statement-macro,
+  bugprone-parent-virtual-call,
+  bugprone-signed-char-misuse,
+  bugprone-sizeof-expression,
+  bugprone-string-constructor,
+  bugprone-suspicious-enum-usage,
+  bugprone-suspicious-semicolon,
+  bugprone-swapped-arguments,
+  bugprone-too-small-loop-variable,
+  bugprone-undelegated-constructor,
+  bugprone-unhandled-self-assignment,
+  bugprone-use-after-move,
+  bugprone-virtual-near-miss,
+  modernize-avoid-bind,
+  modernize-loop-convert,
+  modernize-make-shared,
+  modernize-make-unique,
+  modernize-replace-random-shuffle,
+  modernize-use-bool-literals,
+  modernize-use-emplace,
+  modernize-use-equals-default,
+  modernize-use-equals-delete,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-use-using,
+  performance-avoid-endl,
+  performance-for-range-copy,
+  performance-move-const-arg,
+  performance-move-constructor-init,
+  performance-no-automatic-move,
+  performance-unnecessary-copy-initialization,
+  performance-unnecessary-value-param,
+  readability-braces-around-statements,
+  readability-const-return-type,
+  readability-container-size-empty,
+  readability-delete-null-pointer,
+  readability-else-after-return,
+  readability-identifier-naming,
+  readability-misleading-indentation,
+  readability-redundant-control-flow,
+  readability-redundant-smartptr-get,
+  readability-redundant-string-cstr,
+  readability-simplify-boolean-expr,
+  readability-static-accessed-through-instance,
+  readability-string-compare
+
+HeaderFilterRegex: "src/main/(cpp|include)/.*"
+WarningsAsErrors: "*"
+
+CheckOptions:
+  - key: readability-identifier-naming.ClassCase
+    value: "CamelCase"
+  - key: readability-identifier-naming.StructCase
+    value: "CamelCase"
+  - key: readability-identifier-naming.EnumCase
+    value: "CamelCase"
+  - key: readability-identifier-naming.EnumConstantCase
+    value: "UPPER_CASE"
+  - key: readability-identifier-naming.FunctionCase
+    value: "CamelCase"
+  - key: readability-identifier-naming.MemberCase
+    value: "camelBack"
+  - key: readability-identifier-naming.MemberPrefix
+    value: "_"
+  - key: readability-identifier-naming.ParameterCase
+    value: "camelBack"
+  # Allow single uppercase letters for conventional names (e.g. P, I, D, S, V, A)
+  - key: readability-identifier-naming.ParameterIgnoredRegexp
+    value: "^[A-Z]$"
+  - key: readability-identifier-naming.LocalVariableCase
+    value: "camelBack"
+  - key: readability-identifier-naming.NamespaceCase
+    value: "camelBack"
